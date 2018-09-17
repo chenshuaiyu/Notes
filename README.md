@@ -1,1 +1,2 @@
-# Notes
+# Preparation before work
+
