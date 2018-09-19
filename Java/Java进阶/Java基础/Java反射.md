@@ -167,19 +167,79 @@ static class Proxy implements Subject {
 
 主要涉及两个类，这两个类都是java.lang.reflect包下的类，内部主要通过反射来实现的。
 
-java.lang.reflect.Proxy：这是生成代理类的主类，通过Proxy类生成的代理类都继承了Proxy类。
+- java.lang.reflect.Proxy：这是生成代理类的主类，通过Proxy类生成的代理类都继承了Proxy类。
+- java.lang.reflect.InvocationHandle：这里称它为调用处理器，它是一个接口。当动态处理类中的方法时，将会直接转接到执行自定义的InvocationHandle中的invoke()方法。即我们动态生成的代理类需要完成的具体内容需要自己定义一个类，而这个类必须实现InvocationHandle接口，通过重写invoke()方法来执行具体内容。
+
+Proxy提供了两个方法来创建动态代理类和动态代理实例。
+
+```java
+public static Class<?> getProxyClass(ClassLoader loader,
+                                     Class<?>... interfaces)
+```
+
+返回代理类的java.lang.class对象。第一个参数是类加载器对象（即哪个类加载器这个代理类到JVM的方法区），第二个参数是接口（表明你这个代理类需要实现哪些接口），第三个参数是调用处理器类实例（指定代理类中具体要干什么），该代理类将实现interfaces所指定的所有接口，执行处理对象的每个方法时都会被替代执行InvocationHandle对象的invoke方法。
+
+```java
+public static Object newProxyInstance(ClassLoader loader, Class<?>[] interfaces, InvocationHandler h)
+```
+
+返回代理类实例，参数与上述方法一致。
 
 
 
+# Java反射（三）
 
+### 一、泛型和Class类
 
+JDK1.5后，Java中引入了泛型机制，Class类也增加了泛型功能，从而允许使用泛型来限制Class类，例如：String.class的类型上是Class\<String>。如果Class对应的类暂时未知，则使用CLass<?>。通过反射中使用泛型，可以避免反射生成的对象需要强制类型转换。
 
+泛型的好处：避免类型转换，防止出现ClassCastException。
 
+### 二、使用反射来获取泛型信息
 
+```java
+//获取 Field 对象 f 的类型
+Class<?> a = f.getType();
+```
 
+这种方式只对普通类型的Field有效。如果该Field的类型是有泛型限制的类型， 如`Map<String, Integer>`类型，则不能准确地得到该Field的泛型参数。
 
+```java
+Type type = f.getGenericType();
+```
 
+然后将Type对象强制类型转换为ParameterizedType对象，ParameterizedType代表被参数化的类型，也就是增加了泛型限制的类型。ParameterizedType类提供了如下两个方法：
 
+- getRawType()：返回没有泛型信息的原始类型。
+- getActualTypeArguments()：返回泛型参数的类型。
 
+```java
+public class GenericTest {
 
+    private Map<String, Integer> score;
+
+    public static void main(String[] args) throws Exception {
+
+        Class<GenericTest> clazz = GenericTest.class;
+        Field f = clazz.getDeclaredField("score");
+        //直接使用getType()取出Field类型只对普通类型的Field有效
+        Class<?> a = f.getType();
+        System.out.println("score的类型是：" + a);
+        Type gType = f.getGenericType();
+        if (gType instanceof ParameterizedType) {
+            ParameterizedType pType = (ParameterizedType) gType;
+            Type rType = pType.getRawType();
+            System.out.println("原始类型是：" + rType);
+
+            Type[] tArgs = pType.getActualTypeArguments();
+            System.out.println("泛型参数是：");
+            for (int i = 0; i < tArgs.length; i++) {
+                System.out.println("第 " + i + " 个泛型类型参数 " + tArgs[i]);
+            }
+        } else {
+            System.out.println("获取泛型类型出错！");
+        }
+    }
+}
+```
 
