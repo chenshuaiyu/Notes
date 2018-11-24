@@ -10,7 +10,7 @@ Java反射机制的功能：
 2. 在运行时构造任意一个类的对象。
 3. 在运行判断任意一个类所具有的的成员变量和方法。
 4. 在运行时调用任意一个对象的方法。
-5. 生成动态代理。
+5. 生成动态代理。9
 
 Java反射机制的应用场景：
 
@@ -45,7 +45,7 @@ getDeclaredMethod();//返回class对象对应类的、带指定形参列表的�
 getMethod();//返回class对象对应类的、带指定形参列表的public方法
 ```
 
-#### 3.获取calss对象的构造函数
+#### 3.获取class对象的构造函数
 
 ```java
 getDeclaredConstructors();//获取class对象的所有声明构造函数
@@ -83,8 +83,20 @@ getDeclaringClass();//外部类
 
 生成类的实例对象：
 
-1. 使用Class对象的newInstance()方法来创建该Class对象对应类的实例。这种方式要求该Class对象的对应类有默认构造器，而执行newInstance()方法时实际上是利用默认构造器来创建该类的实例。
+1. 使用Class对象的newInstance()方法来创建该Class对象对应类的实例。这种方式要求该Class对象的对应类有默认构造器，而执行newInstance()方法时实际上是利用**默认构造器**来创建该类的实例。
 2. 先使用Class对象获取指定的Constructor对象，在调用Constructor对象的newInstance()方法来创建该Class对象对应类的实例。通过这种方法可以选择使用指定的构造器来创建实例。
+
+调用类的方法：
+
+1. 通过Class对象的getMethods()方法或者getMethod()方法获得指定方法，返回Method数组或对象。
+2. 调用Method对象中的Object.invoke(Object obj, Object...args)方法。第一个参数对应调用该方法的实例对象，第二个参数对应该方法的参数。
+
+当通过Method的invoke()方法来调用对应的方法时，Java会要求程序必须有调用该方法的权限。如果程序确实需要调用某个对象的private方法，则可以先调用Method对象的如下方法，setAccessible(boolean flag)：将Method对象的accessible设置为指定的布尔值，值为true，指示该Method在使用时应该取消Java语言的访问权限检查：值为false。
+
+访问成员变量值：
+
+1. 通过Class对象的getFields()方法或者getField()方法获得指定方法，返回Field数组或对象。
+2. Field提供了，两组方法来读取或设置成员变量的值，getXXX()，setXXX()。此处的XXX对象基本类型。如果该成员变量的类型是引用类型，则取消get后面的XXX。
 
 # Java反射（二）
 
