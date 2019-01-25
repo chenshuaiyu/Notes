@@ -31,7 +31,6 @@ public static void main(String[] args) {
     } catch (Exception e) {
         e.printStackTrace();
     }
-
 }
 
 static class User implements Serializable {
@@ -58,6 +57,7 @@ static class User implements Serializable {
 
 输出：
 
+```
 read before Serializable:
 username: Alexia
 paddword: 123456
@@ -65,16 +65,17 @@ paddword: 123456
 read after Serializable:
 username: Alexia
 paddword: null
+```
 
 ### 二、transient使用小结
 
 1. 一旦变量被transient修饰，变量将不再是对象持久化的一部分，该变量内容在序列化后无法获得访问。
 2. transient关键字只能修饰变量，而不能修饰方法和类。注意，本地变量是不能被transient关键字修饰的。变量如果是用户自定义类变量，则该类需要实现Serializable接口。
-3. 被transient关键字修饰的变量是不能再被序列化，一个静态变量不管是否被transient修饰，均不能被序列化。
+3. 被transient关键字修饰的变量是不能再被序列化，**一个静态变量不管是否被transient修饰，均不能被序列化**。
 
-对于第三点，将username属性加上static属性，程序运行结果不变。原因是反序列化类中static型变量username的值为当前JVM中对应static变量的值，这个值是JVM中的不是反序列化得出的。
+对于第三点，将username属性加上static属性，程序运行结果不变。原因是**反序列化类中static型变量username的值为当前JVM中对应static变量的值，这个值是JVM中的不是反序列化得出的**。
 
-```
+```java
 public static void main(String[] args) {
     User user = new User();
     user.setUsername("Alexia");
@@ -135,6 +136,7 @@ static class User implements Serializable {
 
 输出：
 
+```
 read before Serializable:
 username: Alexia
 paddword: 123456
@@ -142,8 +144,9 @@ paddword: 123456
 read after Serializable:
 username: Chen
 paddword: null
+```
 
-### 三、transient使用细节——被transient关键字修饰的变量真的变量真的不能被序列化吗？
+### 三、transient使用细节——被transient关键字修饰的变量真的不能被序列化吗？
 
 ```java
 public class ExternalizableTest implements Externalizable {
@@ -176,4 +179,8 @@ public class ExternalizableTest implements Externalizable {
 
 输出：
 
+```
 序列化
+```
+
+在Java中，对象的序列化可以通过实现两种接口来实现，若实现的是Serializable接口，则所有的序列化将会自动进行，**若实现的是Externalizable接口，则没有任何东西可以自动序列化，需要在writeExternal方法中进行手工指定所要系列化的变量，这与是否被transient修饰无关**。
