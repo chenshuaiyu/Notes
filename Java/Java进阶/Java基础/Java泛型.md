@@ -58,7 +58,7 @@ public static void main(String[] args){
     //隐式
     new Person(22);
     //显式
-    new<String> Person("hello"); 
+    new<String> Person("hello");
 }
 ```
 
