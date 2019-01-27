@@ -33,7 +33,7 @@ Java反射机制的应用场景：
 getDeclaredFields();//获取class对象的所有属性
 getFields();//获取class对象的public属性
 getDeclaredField("");//获取class指定属性
-getFields("");//获取class指定的public属性
+getField("");//获取class指定的public属性
 ```
 
 #### 2.获取class对象的方法
@@ -85,6 +85,14 @@ getDeclaringClass();//外部类
 
 1. 使用Class对象的newInstance()方法来创建该Class对象对应类的实例。这种方式要求该Class对象的对应类有默认构造器，而执行newInstance()方法时实际上是利用**默认构造器**来创建该类的实例。
 2. 先使用Class对象获取指定的Constructor对象，在调用Constructor对象的newInstance()方法来创建该Class对象对应类的实例。通过这种方法可以选择使用指定的构造器来创建实例。
+
+```java
+//第一种方式 CLass对象调用newInstance()方法生成
+Object obj = class1.newInstance();
+//第二种方式 对象获得对应的Constructor对象，再通过Constructor对象的newInstance()方法生成
+Constructor<?> constructor = class1.getDeclaredConstructor(String.class);
+obj = constructor.newInstance("hello");;
+```
 
 调用类的方法：
 
