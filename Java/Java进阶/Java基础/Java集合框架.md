@@ -3,9 +3,9 @@
 ### 一、Java集合类简介：
 
 - Set：无序、不可重复的集合。
-- List：有序、重复的集合。
+- List：有序、可重复的集合。
+- Queue：代表一种队列集合实现。
 - Map：具有映射关系的集合。
-- Quene：代表一种队列集合实现。
 
 #### 1.Java集合和数组的区别：
 
@@ -16,15 +16,19 @@
 
 Collection和Map是Java集合框架的根接口。
 
-![集合框架继承](E:\Java\Android笔记\Android-Interview-Guide\assets\Collection继承体系.png)
+![集合框架继承](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java进阶/assets/Collection继承体系.png)
 
-![Map继承体系](E:\Java\Android笔记\Android-Interview-Guide\assets\Map继承体系.png)
+ArrayList，LinkedList，HashSet，TreeSet是经常会用到的集合类。
+
+![Map继承体系](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java进阶/assets/Map继承体系.png)
+
+Map实现类用于保存具有映射关系的数据。HashMap，TreeMap是经常会用到的集合类。
 
 ### 二、Collection接口：
 
 #### 1.简介
 
-使用Iterator对集合元素进行迭代时，把集合元素的值传给了迭代变量（就如同参数传递是值传递，**基本数据类型传递的是值，引用类型传递的仅仅是对象的引用变量**）。
+使用Iterator（迭代器）对集合元素进行迭代时，把集合元素的值传给了迭代变量（就如同参数传递是值传递，**基本数据类型传递的是值，引用类型传递的仅仅是对象的引用变量**）。
 
 #### 2.Set集合
 
@@ -57,14 +61,14 @@ Map内部包括一个Entry，封装了一个key-value对。
 
 ArrayList是一个相对来说比较简单的数据结构，最重要的一点就是它的**自动扩容**，可以认为是“动态数组”。
 
-1. 实现于List、RandomAccess、Cloneable, java.io.Serializable接口，可以插入空数据。
-2. 以数组实现。节约空间，但数组有容量限制。超出限制会增加50%容量，用System.arraycopy()复制到新的数组，因此最好能给出数组大小的预估值。默认第一次插入数组时创建大小为10的数组。
-3. 按数组下标访问元素——get(i)/set(i,e)的性能很高，这是数组的基本优势。
+1. 实现了List、RandomAccess、Cloneable, java.io.Serializable接口，可以插入空数据。
+2. 以数组实现。节约空间，但数组有容量限制。超出限制会增加50%容量，用System.arraycopy()复制到新的数组，因此最好能给出数组大小的预估值。**默认第一次插入数组时创建大小为10的数组**。
+3. 按数组下标访问元素——get(i)/set(i, e)的性能很高，这是数组的基本优势。
 4. 直接在数组末尾加入元素，add(e)的性能也高，但如果按下标插入，删除元素——add(i,e),remove(i),remove(e)，则要用System.arraycopy()来移动部分受影响的元素，性能变差，这是基本劣势。
 
-RandomAccess，Cloneable, java.io.Serializable接口都是标记接口，实现了RandomAccess接口表示随机访问，使用foreach比Iterator要快。
+RandomAccess，Cloneable, java.io.Serializable接口都是**标记接口**，实现了RandomAccess接口表示随机访问，使用foreach比Iterator要快。
 
-**系列化：**
+**序列化：**
 
 Java序列化和反序列化：序列化就是以一种形式保持，比如存放到硬盘或用于传输。反序列化是序列化逆过程。
 
