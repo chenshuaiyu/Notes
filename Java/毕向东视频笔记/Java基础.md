@@ -2,7 +2,19 @@
 
 ### 数据类型
 
-class，interface，byte，short，int，long，float，double，char，boolean，void
+- 基本数据类型：byte，short，int，long，float，double，char，boolean
+- 引用数据类型：class，interface，数组
+
+| 基本类型 | 字节 | 范围                       | 默认值 | 包装类    |
+| -------- | ---- | -------------------------- | ------ | --------- |
+| byte     | 1    | [-2^7,+2^7-1]              | 0      | Byte      |
+| short    | 2    | [-2^15,+2^15-1]            | 0      | Short     |
+| int      | 4    | [-2^31,+2^31-1]            | 0      | Integer   |
+| long     | 8    | [-2^63,+2^63-1]            | 0L     | Long      |
+| float    | 4    | IEEE754                    | 0.0f   | Float     |
+| double   | 8    | IEEE754                    | 0.0d   | Double    |
+| char     | 2    | [Unicode 0,Unicode 2^16-1] | ''     | Character |
+| boolean  | -    | -                          | false  | Boolean   |
 
 ### 标识符
 
@@ -60,10 +72,10 @@ byte，short，int，char，String（Java 7 新特性）
 
 ### 静态变量和类变量的初始化位置
 
-| 变量     | 位置                                     |
-| -------- | ---------------------------------------- |
-| 静态变量 | 定义时赋值，静态代码块中初始化           |
-| 类变量   | 定义时赋值，静态代码块，构造函数中初始化 |
+| 变量     | 位置                                 |
+| -------- | ------------------------------------ |
+| 静态变量 | 定义时赋值，静态代码块中初始化       |
+| 类变量   | 定义时赋值，代码块，构造函数中初始化 |
 
 ### abstract抽象类
 
