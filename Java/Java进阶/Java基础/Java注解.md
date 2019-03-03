@@ -54,6 +54,10 @@ Java提供了多种内建的注解，常用的注解：@Override，@Deprecated�
 | finally     | 任意finally子句不能正常完成时的警告             |
 | all         | 以上所有情况的警告                              |
 
+##### @FunctionalInterface
+
+用户告知编译器，检查这个接口，保证该接口是函数式接口，即只能包含一个抽象方法，否则就会编译出错。
+
 #### 3.元Annotation
 
 ##### @Documented
@@ -119,13 +123,13 @@ public @interface MyAnnotation{
 
 ```java
 public class AnnotationDemo{
-    @AuthorAnno(name="lvr", website="hello", revision=1)
+    @MyAnnotataion(name="lvr", website="hello", revision=1)
     public static void main(String[] args){
         System.out.println("I am main method");
     }
     
     @SuppressWarning({"unchecked", "deprecation"})
-    @AuthorAnno(name="lvr", website="hello", revision=2)
+    @MyAnnotataion(name="lvr", website="hello", revision=2)
     public void demo{
         System.out.println("I am demo method");
     }
@@ -138,11 +142,24 @@ public class AnnotationDemo{
 
 通过反射技术来解析自定义注解。关于反射类位于包java.lang.reflect，其中有一个接口AnnotationElement，该接口主要有如下几个实现类：Class，Constructor，Field，Method，Package。除此之外，该接口定义了注释相关的几个核心方法，
 
+因此，当获取了某个类的Class对象，然后获取其Field，Method等对象，通过上述4个方法提取其中的注解，然后获得注解的详细信息。
 
+```java
+public class AnnotationParser {
+    public static void main(String[] args) throws SecurityException, ClassNotFoundException {
+        String clazz = "com.lvr.annotation.AnnotationDemo";
+        Method[]  demoMethod = AnnotationParser.class
+                .getClassLoader().loadClass(clazz).getMethods();
 
-
-
-
-
-
-
+        for (Method method : demoMethod) {
+            if (method.isAnnotationPresent(MyAnnotataion.class)) {
+                 MyAnnotataion annotationInfo = method.getAnnotation(MyAnnotataion.class);
+                 System.out.println("method: "+ method);
+                 System.out.println("name= "+ annotationInfo.name() +
+                         " , website= "+ annotationInfo.website()
+                        + " , revision= "+annotationInfo.revision());
+            }
+        }
+    }
+}
+```

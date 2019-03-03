@@ -235,11 +235,9 @@ Type type = f.getGenericType();
 
 ```java
 public class GenericTest {
-
     private Map<String, Integer> score;
 
     public static void main(String[] args) throws Exception {
-
         Class<GenericTest> clazz = GenericTest.class;
         Field f = clazz.getDeclaredField("score");
         //直接使用getType()取出Field类型只对普通类型的Field有效
@@ -263,3 +261,12 @@ public class GenericTest {
 }
 ```
 
+```
+score的类型是：interface java.util.Map
+原始类型是：interface java.util.Map
+泛型类型是：
+第 0 个泛型类型参数 class java.lang.String
+第 1 个泛型类型参数 class java.lang.Integer
+```
+
+Field的getType()方法只能获取到普通类型的Field的数据类型，对于增加了泛型参数的Field，应该是用getGenericType()方法来取得其类型。
