@@ -4,7 +4,7 @@
 
 #### 1.典型的生命周期的了解
 
-![Activity生命周期](E:\Github仓库\Notes\Android\Android进阶\assets\Activity生命周期.png)
+![Activity生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Activity生命周期.png)
 
 个人记忆法：CSRPSD + R
 
@@ -25,7 +25,10 @@
 
 **onCreate和onRestoreInstanceState方法来恢复Activity状态的区别：**
 
-onRestoreInstanceState表示Bundle对象非空，不必加非空判断，onCreate需要非空判断。建议使用onRestoreInstanceState。
+- onRestoreInstanceState表示Bundle对象非空，不必加非空判断
+- onCreate需要非空判断。
+
+建议使用onRestoreInstanceState。
 
 **1.横竖屏切换的生命周期：**
 
@@ -80,7 +83,7 @@ Activity的管理是采用任务栈的形式，采用后进先出的栈结构。
 
 **特殊情况：**
 
-如果在Service或Application中启动一个新的Activity，并没有所谓的任务栈，可以使用标记为FLAG解决。为待启动的Activity指定FLAG_ACTIVITY_NEW_TASK标记位，创建一个新栈。
+如果在Service或Application中启动一个新的Activity，并没有所谓的任务栈，可以使用标记为FLAG解决。为待启动的Activity指定`FLAG_ACTIVITY_NEW_TASK`标记位，创建一个新栈。
 
 ##### 2.栈顶复用模式（singleTop）
 
@@ -131,4 +134,4 @@ taskAffinity：
 
 1. FLAG_ACTIVITY_NEW_TASK：效果与指定singleTask模式一致。
 2. FLAG_ACTIVITY_SINGLE_TOP：效果与指定singleTop模式一致。
-3. FLAG_ACTIVITY_CLEAR_TOP：当它启动时，在同一个任务栈中所有位于它上面的Activity都要出栈。如果和singleTask模式一起出现，若被启动的Activity已经存在于栈中，**则清除之上的Activity，并调用该Activity的onNewIntent方法**。如果被启动的Activity采用standard模式，那么该Activity连同之上的所有Activity出栈，然后创建新的Activity实例并压入栈中。
+3. FLAG_ACTIVITY_CLEAR_TOP：当它启动时，在同一个任务栈中所有位于它上面的Activity都要出栈。1.与singleTask模式配合使用，**与singleTask效果一样**。2.与singleTop模式配合使用，**则清除之上的Activity，并调用该Activity的onNewIntent方法**。3.与standard模式配合使用，**该Activity连同之上的所有Activity出栈，然后创建新的Activity实例并压入栈中**。

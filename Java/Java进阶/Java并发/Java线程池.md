@@ -1,109 +1,3 @@
-# Java并发
-
-- 创建线程的方式
-- Synchronized/ReentrantLock
-- 生产者/消费者模式
-- volatile关键字
-- 乐观锁/悲观锁
-- 死锁
-- 了解的并发集合
-
-# Java创建线程的三种方式
-
-1. 继承Thead创建线程类。
-
-   ```java
-   public class FirstThreadTest extends Thread {
-       int i = 0;
-       
-       public void run() {
-           for (; i < 100; i++) {
-               System.out.println(getName() + "  " + i);
-           }
-       }
-   
-       public static void main(String[] args) {
-           for (int i = 0; i < 100; i++) {
-               System.out.println(Thread.currentThread().getName() + "  : " + i);
-               if (i == 20) {
-                   new FirstThreadTest().start();
-                   new FirstThreadTest().start();
-               }
-           }
-       }
-   }
-   ```
-
-2. 通过Runnable接口创建线程类。
-
-   ```java
-   public class RunnableThreadTest implements Runnable {
-       private int i;
-   
-       public void run() {
-           for (i = 0; i < 100; i++) {
-               System.out.println(Thread.currentThread().getName() + " " + i);
-           }
-       }
-   
-       public static void main(String[] args) {
-           for (int i = 0; i < 100; i++) {
-               System.out.println(Thread.currentThread().getName() + " " + i);
-               if (i == 20) {
-                   RunnableThreadTest rtt = new RunnableThreadTest();
-                   new Thread(rtt, "新线程1").start();
-                   new Thread(rtt, "新线程2").start();
-               }
-           }
-       }
-   }
-   ```
-
-3. 通过Callable和Future创建线程。
-
-   ```java
-   public class CallableThreadTest implements Callable<Integer>
-   {
-   
-       public static void main(String[] args)
-       {
-           CallableThreadTest ctt = new CallableThreadTest();
-           FutureTask<Integer> ft = new FutureTask<>(ctt);
-           for(int i = 0;i < 100;i++)
-           {
-               System.out.println(Thread.currentThread().getName()+" 的循环变量i的值"+i);
-               if(i==20)
-               {
-                   new Thread(ft,"有返回值的线程").start();
-               }
-           }
-           try
-           {
-           	//通过get方法获得子线程执行结束的返回值
-               System.out.println("子线程的返回值："+ft.get());
-           } catch (InterruptedException e)
-           {
-               e.printStackTrace();
-           } catch (ExecutionException e)
-           {
-               e.printStackTrace();
-           }
-   
-       }
-   
-       @Override
-       public Integer call() throws Exception
-       {
-           int i = 0;
-           for(;i<100;i++)
-           {
-               System.out.println(Thread.currentThread().getName()+" "+i);
-           }
-           return i;
-       }
-   }
-   ```
-
 # Java线程池
 
 ### 一、概述
@@ -120,7 +14,7 @@
 创建一个线程池，
 
 ```java
-ThreadPoolExecutor service = new ThreadPoolExecutor();
+ExecutorService service = new ThreadPoolExecutor(...);
 ```
 
 构造方法，
@@ -151,7 +45,7 @@ public ThreadPoolExecutor(int corePoolSize,
 
 1.corePoolSize
 
-线程池中的核心线程数，默认情况下，核心线程一种存活在线程池中，即使他们在线程池中处于闲置状态。除非将ThreadPoolExecutor的allowCoreThreadTimeOut属性设为true的时候，这时候处于闲置的核心线程在等待新任务到来时会有超时策略，这个超时时间由keepAliveTime来指定。一旦超过所设置的超时时间，闲置的核心线程就会被终止。
+线程池中的核心线程数，默认情况下，核心线程一直存活在线程池中，即使他们在线程池中处于闲置状态。除非将ThreadPoolExecutor的allowCoreThreadTimeOut属性设为true的时候，这时候处于闲置的核心线程在等待新任务到来时会有超时策略，这个超时时间由keepAliveTime来指定。一旦超过所设置的超时时间，闲置的核心线程就会被终止。
 
 2.maximumPoolSize
 
@@ -184,9 +78,18 @@ public ThreadPoolExecutor(int corePoolSize,
 
 7.handler
 
+是RejectedExecutionHandler对象，而RejectedExecutionHandler是一个接口，里面只有一个rejectedExecution方法。**当任务队列已满并且线程池中的活动线程已经达到所限定的最大值或者是无法成功执行任务，这时候ThreadPoolExecutor会调用RejectedExecutionHandler中的rejectedExecution方法。在ThreadPoolExecutor中有四个内部类实现了RejectedExecutionHandler接口。在线程池中它默认是AbortPolicy，在无法处理新任务时抛出RejectedExecutionException异常**。
 
+TheadPoolExecutor中提供的四个可选值：
 
+| 可选值              | 说明                                     |
+| ------------------- | ---------------------------------------- |
+| CallerRunsPolicy    | 只用调用者所在线程来与运行任务           |
+| AbortPolicy         | 直接抛出RejectedExecutionException异常   |
+| DiscardPolicy       | 丢弃掉该任务，不进行处理                 |
+| DiscardOldestPolicy | 丢弃队列里最近的一个任务，并执行当前任务 |
 
+也可以通过实现RejectedExecutionHandler接口来自定义自己的Handle，如记录日志或持久化不能处理的任务。
 
 
 
