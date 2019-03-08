@@ -70,7 +70,7 @@ public ThreadPoolExecutor(int corePoolSize,
 | SynchronousQueue      | 内部没有任何容量的阻塞队列，在它内部没有任何的缓存空间。对于SynchronousQueue的数据元素只有当我们试着取走的时候才可能存在 |
 | PriorityBlockingQueue | 具有优先级的无限阻塞队列                                     |
 
-还能够通过实现BlockingQueue接口来自定义我们所需要的阻塞队列。
+还能够通过实现`BlockingQueue`接口来自定义我们所需要的阻塞队列。
 
 6.threadFactory
 
@@ -91,9 +91,163 @@ TheadPoolExecutor中提供的四个可选值：
 
 也可以通过实现RejectedExecutionHandler接口来自定义自己的Handle，如记录日志或持久化不能处理的任务。
 
+##### ThreadPoolExecutor的使用
 
+```java
+//其他参数均采用默认值
+ExecutorService service = new ThreadPoolExecutor(5, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+```
 
+可以通过execute和submit两种方法向线程池提交一个任务。
 
+- execute()
 
+```java
+//没有返回值，无法判断任务是否执行成功
+service.execute(new Runnable() {
+	public void run() {
+		System.out.println("execute方式");
+	}
+});
+```
 
+- submit
+
+```java
+//如果子线程任务没有完成，Future的get方法会阻塞住直到任务完成
+//get(long timeout, TimeUnit unit)方法则会阻塞一段时间后立即返回，这时候有可能任务并没有执行完。
+Future<Integer> future = service.submit(new Callable<Integer>() {
+
+	@Override
+	public Integer call() throws Exception {
+		System.out.println("submit方式");
+		return 2;
+	}
+});
+try {
+	Integer number = future.get();
+} catch (ExecutionException e) {
+	e.printStackTrace();
+}
+```
+
+##### 线程池关闭
+
+- shutDown():将线程状态设置为SHUTDOWN状态，然后中断所有没有正在执行的进程。
+- shutDownNow():将线程状态设置为STOP状态，然后中断所有任务（包括正在执行的进程），并返回等待执行任务的列表。
+
+**中断采用interrupt方法，所有无法响应中断程序的任务可能永远无法终止。**
+
+### 三、线程执行流程
+
+1. 如果在线程池中的线程数量没有达到核心的线程数量，这时候就回启动一个核心线程来执行任务。
+2. 如果线程中的线程数量已经超过核心线程数，这时候任务就会被插入到任务队列中排队等待执行。
+3. 由于任务队列已满，无法将任务插入到任务队列中，这个时候如果线程中的线程数量没有达到线程池所设定的最大值，那么就会立即启动一个非核心线程来执行任务。
+4. 如果线程池中的数量达到了所规定的最大值，那么就会拒绝执行此任务，这时候就会调用RejectedExecutionHandler中的rejectedExecution方法来通知调用者。
+
+### 四、四种线程池类
+
+他们都是直接或间接配置ThreadPoolExecutor来实现各自的功能。这四种线程池分别是：
+
+- newFixedThreadPool
+- newCachedThreadPool
+- newScheduledThreadPool
+- newSingleThreadExecutor
+
+#### 1.newFixedThreadPool
+
+```java
+ExecutorService service = Executors.newFixedThreadPool(4);
+```
+
+该线程池是一种线程数量固定的线程池，在此线程池中，**所容纳的最大线程数就是我们设置的核心线程数**。如果线程池的线程处于空闲状态，他们并不会回收，除非这个线程池被关闭，如果所有的线程都处于活动状态的话，新任务就会处于等待状态，直到有线程空闲出来。
+
+由于newFixedThreadPool只有核心线程，所有这些线程都不会被回收，就可以更快的响应外界请求。
+
+```java
+//只有核心线程，不存在超时机制，采用LinkedBlockingQueue，任务队列的大小是没有限制的。
+public static ExecutorService newFixedThreadPool(int nThreads) {
+	return new ThreadPoolExecutor(nThreads, nThreads,
+		0L, TimeUnit.MILLISECONDS,
+		new LinkedBlockingQueue<Runnable>());
+}
+```
+
+#### 2.newCachedThreadPool
+
+```java
+//核心线程数为0，最大线程数为Integer.MAX_VALUE
+public static ExecutorService newCachedThreadPool() {
+	return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+		60L, TimeUnit.SECONDS,
+		new SynchronousQueue<Runnable>());
+}
+```
+
+**当线程池中的线程都处于活动状态的时候，线程池就会创建一个新的线程来处理任务。该线程池中的线程超时时长为60秒，所以当线程处于闲置状态超过60秒的时候便会被回收。**若是整个线程池的线程都处于闲置状态超过60秒以后，在newCachedThreadPool线程池中是不存在任何线程的，所以这时候它几乎不占用任何的系统资源。
+
+SynchronousQueue内部没有任何容量的阻塞队列。SynchronousQueue内部相当于一个空集合，我们无法将一个任务插入到SynchronousQueue中。所以说在线程池中如果现有线程无法接收任务，将会创建新的线程来执行任务。
+
+#### 3.newScheduledThreadPool
+
+```java
+public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+    return new ScheduledThreadPoolExecutor(corePoolSize);
+}
+public ScheduledThreadPoolExecutor(int corePoolSize) {
+    super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+          new DelayedWorkQueue());
+}
+```
+
+核心线程固定，非核心线程数几乎没有限制，当非核心线程池处于限制状态的时候就会立即被召回。
+
+创建一个可定时执行或周期执行任务的线程池：
+
+```java
+ScheduledExecutorService service = Executors.newScheduledThreadPool(4);
+service.schedule(new Runnable() {
+	public void run() {
+		System.out.println(Thread.currentThread().getName()+"延迟三秒执行");
+	}
+}, 3, TimeUnit.SECONDS);
+service.scheduleAtFixedRate(new Runnable() {
+	public void run() {
+		System.out.println(Thread.currentThread().getName()+"延迟三秒后每隔2秒执行");
+	}
+}, 3, 2, TimeUnit.SECONDS);
+```
+
+输出结果：
+
+```
+pool-1-thread-2延迟三秒后每隔2秒执行 
+pool-1-thread-1延迟三秒执行 
+pool-1-thread-1延迟三秒后每隔2秒执行 
+pool-1-thread-2延迟三秒后每隔2秒执行 
+pool-1-thread-2延迟三秒后每隔2秒执行
+```
+
+```java
+schedule(Runnable command, long delay, TimeUnit unit)//延迟一定时间后执行Runnable任务；
+schedule(Callable callable, long delay, TimeUnit unit)//延迟一定时间后执行Callable任务；
+
+scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit)//延迟一定时间后，以间隔period时间的频率周期性地执行任务；
+
+scheduleWithFixedDelay(Runnable command, long initialDelay, long delay,TimeUnit unit)//与scheduleAtFixedRate()方法很类似，但是不同的是scheduleWithFixedDelay()方法的周期时间间隔是以上一个任务执行结束到下一个任务开始执行的间隔，而scheduleAtFixedRate()方法的周期时间间隔是以上一个任务开始执行到下一个任务开始执行的间隔，也就是这一些任务系列的触发时间都是可预知的。
+```
+
+#### 4.newSingleThreadExecutor
+
+```java
+//只有一个核心线程，对于任务队列没有大小限制，也就意味着这一个任务处于活动状态时，其他任务都会在任务队列中排队等候依次执行
+public static ExecutorService newSingleThreadExecutor() {
+	return new FinalizableDelegatedExecutorService
+	(new ThreadPoolExecutor(1, 1,
+		0L, TimeUnit.MILLISECONDS,
+		new LinkedBlockingQueue<Runnable>()));
+}
+```
+
+newSingleThreadExecutor将所有的外界任务统一到一个线程中支持，所以在这个任务执行之间我们不需要处理线程同步的问题。
 
