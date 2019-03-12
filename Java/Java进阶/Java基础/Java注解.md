@@ -58,7 +58,11 @@ Java提供了多种内建的注解，常用的注解：@Override，@Deprecated�
 
 用户告知编译器，检查这个接口，保证该接口是函数式接口，即只能包含一个抽象方法，否则就会编译出错。
 
-#### 3.元Annotation
+##### @SafeVarargs
+
+参数安全类型注解。它的目的是提醒开发者不要用参数做一些不安全的操作,它的存在会阻止编译器产生 unchecked 这样的警告。它是在 Java 1.7 的版本中加入的。
+
+#### 3.元Annotation（注解上的注解）
 
 ##### @Documented
 
@@ -92,6 +96,10 @@ Java提供了多种内建的注解，常用的注解：@Override，@Deprecated�
 | PACKAGE         | 包声明                             |
 | PARAMETER       | 参数声明                           |
 | TYPE            | 类、接口（包括注解类型）或枚举声明 |
+
+##### @Repeatable
+
+通常是注解的值可以同时取多个。
 
 ### 三、自定义注解（Annotation）
 

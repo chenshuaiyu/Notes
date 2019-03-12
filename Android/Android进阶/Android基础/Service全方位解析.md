@@ -27,12 +27,12 @@ Service默认并不会运行在子线程中，也不会运行在一个独立的�
 | 类别                                        | 区别                                                      |
 | ------------------------------------------- | --------------------------------------------------------- |
 | startService                                | 主要用于启动一个服务执行后台任务，停止服务使用stopService |
-| bingService                                 | 方法启动的服务要进行通信，停止服务使用unbindService       |
+| bindService                                 | 方法启动的服务要进行通信，停止服务使用unbindService       |
 | 同时使用startService，bingService启动的服务 | 停止服务使用stopService与unbindService                    |
 
 ### 三、Service生命周期
 
-![Service生命周期](E:\Github仓库\Notes\Android\Android进阶\assets\Service生命周期.png)
+![Service生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Service生命周期.png)
 
 **onCreate()：**
 
@@ -73,7 +73,7 @@ Service默认并不会运行在子线程中，也不会运行在一个独立的�
 
 如果一个Service在某个Activity中被调用bindService方法启动，不论bindService被调用几次，Service的onCreate只会执行一次，同时onStartCommand方法始终不会被调用。
 
-当建立连接后，Service会一直运行，除非调用unbindService来讲接触绑定、断开连接或调用该Service的Context不存在了，这时系统会自动通知该Service。
+当建立连接后，Service会一直运行，除非调用unbindService来讲解除绑定、断开连接或调用该Service的Context不存在了，这时系统会自动通知该Service。
 
 注意：
 
@@ -82,3 +82,5 @@ Service默认并不会运行在子线程中，也不会运行在一个独立的�
 ##### 3.混合型（上面两种方式的交互）
 
 同时startService和bindService时，必须先调用unBindService后再stopService才会停止服务。
+
+### 四、IntentService
