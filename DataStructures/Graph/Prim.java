@@ -1,12 +1,13 @@
 package Graph;
 
-class Edge {
-    int beg;
-    int en;
-    int len;
-}
 
 public class Prim {
+    class Edge {
+        int beg;
+        int en;
+        int len;
+    }
+
     public void prim(Graph g) {
         Edge[] tree = new Edge[g.vertexNum - 1];
         for (int i = 0; i < tree.length; i++) {
@@ -44,9 +45,8 @@ public class Prim {
         }
 
         for (int i = 0; i < tree.length; i++) {
-            System.out.println(tree[i].beg + " -> " + tree[i].en + " 长度: " + g.edges[tree[i].beg][tree[i].en]);
+            System.out.println(tree[i].beg + " -> " + tree[i].en + " 权值: " + g.edges[tree[i].beg][tree[i].en]);
         }
-
     }
 
     public static void main(String[] args) {
