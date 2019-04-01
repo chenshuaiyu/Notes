@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 快速排序
+ */
 public class QuickSort {
     public void quickSort(int[] nums, int left, int right) {
         if (left < right) {

@@ -1,5 +1,10 @@
 package LinkedList;
 
+/**
+ * 链表的简单实现
+ *
+ * @param <T>
+ */
 public class LinkedList<T> {
     private class Node {
         public T t;

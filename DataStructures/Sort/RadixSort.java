@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 基数排序
+ */
 public class RadixSort {
     public void radixSort(int[] nums, int maxDigit) {
         List<List<Integer>> res = new ArrayList<>();

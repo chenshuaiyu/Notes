@@ -1,5 +1,10 @@
 package Set;
 
+/**
+ * 集合
+ *
+[ * @param <T>
+ */
 public interface Set<T> {
     // 添加元素
     void add(T t);

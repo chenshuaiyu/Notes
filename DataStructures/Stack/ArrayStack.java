@@ -2,6 +2,10 @@ package Stack;
 
 import ArrayList.ArrayList;
 
+/**
+ * 顺序栈的简单实现
+ * @param <T>
+ */
 public class ArrayStack<T> implements Stack<T> {
     private ArrayList<T> data;
 

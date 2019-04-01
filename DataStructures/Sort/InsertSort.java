@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 插入排序
+ */
 public class InsertSort {
     public void insertSort(int[] nums) {
         for (int i = 1; i < nums.length; i++) {

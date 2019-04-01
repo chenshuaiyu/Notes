@@ -2,6 +2,11 @@ package Set;
 
 import LinkedList.LinkedList;
 
+/**
+ * 链表集合的简单实现
+ *
+ * @param <T>
+ */
 public class LinkedListSet<T> implements Set<T> {
     private LinkedList<T> data;
 

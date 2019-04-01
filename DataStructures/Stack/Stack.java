@@ -1,5 +1,10 @@
 package Stack;
 
+/**
+ * 栈
+ *
+ * @param <T>
+ */
 public interface Stack<T> {
     // 入栈
     void push(T t);

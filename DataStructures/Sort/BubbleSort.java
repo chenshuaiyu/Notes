@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 冒泡排序
+ */
 public class BubbleSort {
     public void bubbleSort(int[] nums) {
         for (int i = 0; i < nums.length - 1; i++) {

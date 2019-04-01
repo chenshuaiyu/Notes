@@ -2,6 +2,11 @@ package Queue;
 
 import java.util.Arrays;
 
+/**
+ * 循环队列的简单实现
+ *
+ * @param <T>
+ */
 public class LoopQueue<T> implements Queue<T> {
     private T[] data;
     private int front, tail;

@@ -2,6 +2,11 @@ package ArrayList;
 
 import java.util.Arrays;
 
+/**
+ * 顺序表的简单实现
+ *
+ * @param <T>
+ */
 public class ArrayList<T> {
     private T[] data;
     private int size;

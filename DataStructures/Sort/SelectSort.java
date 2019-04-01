@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 选择排序
+ */
 public class SelectSort {
     public void selectSort(int[] nums) {
         for (int i = 0; i < nums.length; i++) {

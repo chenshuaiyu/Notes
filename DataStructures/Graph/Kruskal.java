@@ -1,6 +1,8 @@
 package Graph;
 
-
+/**
+ * Kruskal 算法：最小生成树
+ */
 public class Kruskal {
     class Edge {
         int beg;

@@ -1,5 +1,8 @@
 package UnionFind;
 
+/**
+ * 并查集
+ */
 public class UnionFind {
     private int count;
     private int[] parent;

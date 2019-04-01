@@ -2,6 +2,11 @@ package Queue;
 
 import LinkedList.LinkedList;
 
+/**
+ * 链表队列的简单实现
+ *
+ * @param <T>
+ */
 public class LinkedListQueue<T> implements Queue<T> {
     private LinkedList<T> data;
 

@@ -4,6 +4,9 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
 
+/**
+ * 二叉树的遍历
+ */
 public class Traversal {
     public BinaryTree genBinaryTree(Integer[] nodes, int index) {
         BinaryTree tree = null;

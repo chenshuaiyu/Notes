@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 二分插入排序
+ */
 public class BinaryInsertSort {
     public void binaryInsertSort(int[] nums) {
         for (int i = 1; i < nums.length; i++) {

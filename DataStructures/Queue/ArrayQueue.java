@@ -2,6 +2,11 @@ package Queue;
 
 import ArrayList.ArrayList;
 
+/**
+ * 顺序表队列的简单实现
+ *
+ * @param <T>
+ */
 public class ArrayQueue<T> implements Queue<T> {
 
     private ArrayList<T> data;

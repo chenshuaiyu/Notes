@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 归并排序
+ */
 public class MergeSort {
     public void mergeSort(int[] nums, int left, int right) {
         if (left >= right) return;

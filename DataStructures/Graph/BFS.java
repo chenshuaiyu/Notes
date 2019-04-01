@@ -3,6 +3,9 @@ package Graph;
 import java.util.LinkedList;
 import java.util.Queue;
 
+/**
+ * 图的 BFS 算法
+ */
 public class BFS {
     public void bfsTraverse(Graph g) {
         int count = 0;

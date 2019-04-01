@@ -2,6 +2,10 @@ package Stack;
 
 import LinkedList.LinkedList;
 
+/**
+ * 链栈的简单实现
+ * @param <T>
+ */
 public class LinkedListStack<T> implements Stack<T> {
     private LinkedList<T> data;
 

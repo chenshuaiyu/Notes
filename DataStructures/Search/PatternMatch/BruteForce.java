@@ -1,5 +1,8 @@
 package Search.PatternMatch;
 
+/**
+ * 暴力字符串匹配算法
+ */
 public class BruteForce {
     public int bruteForce(String t, String p) {
         int i = 0, j = 0;

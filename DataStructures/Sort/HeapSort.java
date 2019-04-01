@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 堆排序
+ */
 public class HeapSort {
     public void heapSort(int[] nums) {
         for (int i = nums.length / 2 - 1; i >= 0; i--)

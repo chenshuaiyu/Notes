@@ -1,5 +1,8 @@
 package Search.BinarySearch;
 
+/**
+ * 二分搜索
+ */
 public class BinarySearch {
     public int binarySearch(int[] nums, int target) {
         int l = 0, r = nums.length - 1, mid;

@@ -1,6 +1,8 @@
 package Graph;
 
-
+/**
+ * Prim 算法：最小生成树
+ */
 public class Prim {
     class Edge {
         int beg;

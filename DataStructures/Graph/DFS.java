@@ -1,5 +1,8 @@
 package Graph;
 
+/**
+ * 图的 DFS 算法
+ */
 public class DFS {
     public void dfsTraverse(Graph g) {
         int[] visited = new int[g.vertexNum];

@@ -1,5 +1,10 @@
 package Queue;
 
+/**
+ * 队列
+ *
+ * @param <T>
+ */
 public interface Queue<T> {
 
     // 入队

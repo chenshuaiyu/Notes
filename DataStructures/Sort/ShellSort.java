@@ -2,6 +2,9 @@ package Sort;
 
 import java.util.Arrays;
 
+/**
+ * 希尔排序
+ */
 public class ShellSort {
     public void shellSort(int[] nums) {
         for (int d = nums.length / 2; d >= 1; d /= 2) {
