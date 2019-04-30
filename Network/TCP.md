@@ -37,7 +37,7 @@ TCP发送的报文段是交给IP层传送，但IP层只能提供尽最大努力�
 
 “停止等待”就是每发送完一个分组就停止发送，等待对方的确认，在收到确认后再发送下一个分组。
 
-![停止等待协议](E:\Github仓库\Notes\Network\assets\停止等待协议.PNG)
+![停止等待协议](https://github.com/chenshuaiyu/Notes/blob/master/Network/assets/停止等待协议.PNG)
 
 超时重传：
 
@@ -45,7 +45,7 @@ TCP发送的报文段是交给IP层传送，但IP层只能提供尽最大努力�
 2. 分组和确认都必须进行编号，这样才能明确哪一个发送出去的分组收到了确认，而哪一个分组还没有收到确认。
 3. 超时计时器设置的重传时间应当比数据在分组传输的平均往返时间更长一些。
 
-![确认丢失和确认迟到](E:\Github仓库\Notes\Network\assets\确认丢失和确认迟到.PNG)
+![确认丢失和确认迟到](https://github.com/chenshuaiyu/Notes/blob/master/Network/assets/确认丢失和确认迟到.PNG)
 
 确认丢失：
 假定B又收到了重传的分组M1，这时应采取两个活动：
@@ -59,7 +59,7 @@ B对分组M1的确认迟到了，A会收到重复的确认。对重复的确认�
 
 信道利用率：
 
-![停止等待协议的信道利用率太低](E:\Github仓库\Notes\Network\assets\停止等待协议的信道利用率太低.PNG)
+![停止等待协议的信道利用率太低](https://github.com/chenshuaiyu/Notes/blob/master/Network/assets/停止等待协议的信道利用率太低.PNG)
 $$
 U=\frac{T_D}{T_D+RTT+T_A}
 $$
@@ -70,7 +70,7 @@ $$
 
 #### 2. 连续ARQ协议
 
-![连续ARQ协议的工作原理](E:\Github仓库\Notes\Network\assets\连续ARQ协议的工作原理.PNG)
+![连续ARQ协议的工作原理](https://github.com/chenshuaiyu/Notes/blob/master/Network/assets/连续ARQ协议的工作原理.PNG)
 
 连续ARQ协议规定：
 
@@ -85,7 +85,7 @@ Go-back-N（后退N）：表示需要再退回来重传已发送过的N个分组
 
 ### 3. TCP报文的首部格式
 
-![TCP报文段的首部格式](E:\Github仓库\Notes\Network\assets\TCP报文段的首部格式.PNG)
+![TCP报文段的首部格式](https://github.com/chenshuaiyu/Notes/blob/master/Network/assets/TCP报文段的首部格式.PNG)
 
 ### 4. TCP可靠传输的实现
 
