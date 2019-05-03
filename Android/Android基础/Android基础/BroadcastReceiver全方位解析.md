@@ -56,7 +56,7 @@
 <receiver
 	//是否启用此广播接收器
 	android:enable=["true"|"false"]
-    //是否接受其他APP发出的广播，默认值是由receiver中有无intent-filter决定的：如果有intent-filter，默认值为true，否则为false
+    //是否接收其他APP发出的广播，默认值是由receiver中有无intent-filter决定的：如果有intent-filter，默认值为true，否则为false
 	android:exported=["true"|"false"]
 	android:icon="drawable resource"
 	android:label="string resource"
