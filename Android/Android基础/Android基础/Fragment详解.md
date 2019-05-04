@@ -6,18 +6,40 @@
 
 ### 2. 生命周期
 
+#### 1.运行状态
+
+当一个碎片是可见的，并且它所关联的活动正处于运行状态时，该碎片也处于运行状态。
+
+#### 2.暂停状态
+
+当一个活动进入暂停状态时（由于另一个未占满屏幕的活动被添加到了栈顶），与它相关联的可见碎片就会进入到暂停状态。
+
+#### 3.停止状态
+
+- 当一个活动进入停止状态时，与它相关联的碎片就会进入到停止状态。
+- 通过调用FragmentTransaction的remove()、replace()方法将碎片从活动中移除，但如果在事务提交之前调用addToBackStack()方法，这时的碎片也会进入到停止状态。
+
+进入停止状态的碎片对用户来说是完全不可见的，有可能会被系统回收。
+
+#### 4.销毁状态
+
+- 当活动被销毁时，与它相关联的碎片就会进入到销毁状态。
+- 通过调用FragmentTransaction的remove()、replace()方法将碎片从活动中移除，但如果在事务提交之前并没有调用addToBackStack()方法，这时的碎片也会进入到销毁状态。
+
+![Fragment生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Fragment生命周期.png)
+
 ```java
-onAttach()//当Fragment与Activity发生关联的时候调用
+onAttach()//当Fragment与Activity建立关联的时候调用
 onCreate()
-onCreateView()//创建该Fragement的视图
-onActivityCreated()//当Activity的onCreate方法返回时调用
+onCreateView()//为Fragment创建视图的时候调用
+onActivityCreated()//确保与Fragment相关联的活动一定已经创建完毕的时候调用（当Activity的onCreate方法返回时调用）
 onStart()
 onResume()
 onPause()
 onStop()
-onDestroyView()//当该Fragment的视图被移除时调用
+onDestroyView()//当与Fragment关联的视图被移除的时候调用
 onDestroy()
-onDatch()//当Fragment与Activity取消关联的时候调用
+onDatch()//当Fragment与Activity解除关联的时候调用
 ```
 
 注意：除了onCreateView，其他的所有方法如果重写了，必须调用父类对该方法的实现。

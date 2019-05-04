@@ -6,7 +6,9 @@
 
 ### 二、作用
 
-进程间数据共享，即跨进程通信。
+进程间数据交互和共享，即跨进程通信。
+
+ContentProvider = 中间者角色（搬运工），真正存储和操作的数据源还是原来存储数据的方式（文件，xml，数据库或网络）。
 
 ### 三、原理
 
@@ -14,7 +16,7 @@
 
 ### 四、使用方法
 
-#### 4.1 统一资源定位符
+#### 4.1 统一资源定位符（URI）
 
 Uniform Resourse Identifier，即统一资源标识符。
 
@@ -45,9 +47,9 @@ Uri uri = Uri.parse("content://com.example.app.provider/User/1");
 - 如果内容URI以路径结尾，后接android.cursor.dir/，如果以id结尾，后接android.cursor.item/
 - 最后接上vnd.\<acthority>.\<path>
 
-#### 4.3 ContentProvider类
+#### 4.3 ContentProvider类 
 
-```
+```java
 public Uri insert(Uri uri, ContentValues values)
 public int delete(Uri uri, String selection, String[] selectionArgs)
 public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs)
@@ -103,6 +105,7 @@ Uri resultUri = ContentUris.withAppendedId(uri, 7);
 
 //从URL中获取ID
 Uri uri = Uri.parse("content://cn.scu.myprovider/user/7") 
+//获取结果为7
 long personid = ContentUris.parseId(uri); 
 ```
 
@@ -160,11 +163,13 @@ getContentResolver().registerContentObserver(uri);
 public class UserContentProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
         db.insert("user", "userid", values);
-        getContext().getContentResolver().notifyChange(uri, null);
         // 通知访问者
+        getContext().getContentResolver().notifyChange(uri, null);
     }
 }
 
 // 步骤3：解除观察者
 getContentResolver().unregisterContentObserver（uri）；
 ```
+
+[有关ContentObserver](https://blog.csdn.net/qinjuning/article/details/7047607#commentBox)

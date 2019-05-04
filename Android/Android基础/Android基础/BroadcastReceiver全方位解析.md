@@ -13,7 +13,7 @@
 应用场景：
 
 1. 不同组件之间通信（包括应用内/不同应用之间）
-2. 与Android系统在特定情况下进行通信。
+2. 与Android系统在特定情况下进行通信（例如当电话呼入时，网络可用时）。
 3. 多线程通信
 
 ### 三、实现原理
@@ -32,7 +32,7 @@
 2. 广播发送者通过Binder机制向AMS发送广播。
 3. AMS根据广播发送者要求，在已注册列表中，寻找合适的广播接收者（寻找依据：IntentFilter/Permission）。
 4. AMS将广播发送到合适的广播接收者相应的消息循环队列中。
-5. 广播接收者通过消息循环拿到此广播，并回调onReceive()。
+5. 广播接收者通过消息循环拿到此广播，并回调`onReceive()`方法。
 
 **注意：**
 
@@ -65,16 +65,20 @@
 	android:permission="string"
 	//默认为app的进程，可以指定独立进程，Android四大基本组件都可以通过此属性指定自己的独立进程
 	android:process="string">
+    <intent-filter>
+    	<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+    </intent-filter>
 </receiver>
 ```
 
 ##### 4.2.2 动态注册
 
-通过Context.registerReceiver，Context.unregisterReceiver进行动态注册，销毁。
+通过`Context.registerReceiver()`，`Context.unregisterReceiver()`进行动态注册，销毁。
 
 **注意：**
 
-动态广播最好在Activity的onResume()，onPause()注销。
+1. 动态广播最好在Activity的onResume()，onPause()注销。
+2. 对于动态广播，有注册必然得有注销，否则会导致内存泄露。
 
 ##### 4.2.3 两种注册方式的区别
 
@@ -88,16 +92,16 @@
 ##### 4.3.1 广播的发送
 
 - 广播是用Intent（意图）标识。
-- 定义广播的本质：定义广播所具备的意图。
+- 定义广播的本质：定义广播所具备的意图（Intent）。
 - 广播发送：广播发送者将此广播的意图通过sendBroadcast()方法发送出去。
 
 ##### 4.3.2 广播的类型
 
-- 普通广播
-- 系统广播
-- 有序广播
-- APP应用内广播
-- 粘性广播
+- 普通广播（Normal Broadcast）
+- 系统广播（System Broadcast）
+- 有序广播（Ordered Broadcast）
+- APP应用内广播（Local Broadcast）
+- 粘性广播（Sticky Broadcast）
 
 ###### 1.普通广播
 
@@ -134,7 +138,7 @@
 
 ###### 3.有序广播
 
-- sendOrderedBroadcast(intent)
+- `sendOrderedBroadcast(intent)`
 - 按照广播接收者的优先级（priority）按照顺序接收。
 - 先接受广播的接收者可以对广播就行截断（abort）和修改。
 
