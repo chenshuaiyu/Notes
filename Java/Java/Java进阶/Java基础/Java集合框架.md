@@ -328,16 +328,16 @@ void linkLast(E e) {
 
 Capacity是bucket的大小，Load factor是bucket填满程度的最大比例。如果对迭代性能的要求很高的话，不要把Capacity设置过大，也不要把Load factor设置过小。
 
-当bucket中的entries的数目大于`Capacity×Load factor`时，就需要调整bucket的大小为当前的2倍。
+当bucket中的entries的数目大于`Capacity × Load factor`时，就需要调整bucket的大小为当前的2倍。
 
 ### 三、put函数的实现
 
-1. 对key的hashCode()做hash，然后在计算index
+1. 对key的hashCode()做hash()，然后在计算index
 2. 如果没碰撞直接放到bucket里
 3. 如果碰撞了，以链表的形式存在buckets后
 4. 如果碰撞导致链表过长（大于等于TREEIFY_THRESHOLD），就把链表转换成红黑树
 5. 如果节点已经存在就替换old value（保证key的唯一性）
-6. 如果bucket满了（超过`load factor * current capacity），就要resize。
+6. 如果bucket满了（超过`load factor × current capacity`），就要resize。
 
 ```java
 public V put(K key, V value) {
@@ -435,7 +435,7 @@ final Node<K,V> getNode(int hash, Object key) {
 
 在get和put的过程中，计算下标时，先对hashCode进行hash操作，然后再通过hash值进一步计算下标，如下图所示：
 
-![hash函数的实现](E:\Java\Android笔记\Android-Interview-Guide\assets\hash函数的实现.png)
+![hash函数的实现](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/hash函数的实现.png)
 
 ```java
 static final int hash(Object key) {

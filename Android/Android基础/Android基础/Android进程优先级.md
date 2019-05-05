@@ -14,7 +14,7 @@ Android系统中，当系统内存不足时，Android系统将根据进程的优
 
 - 处于正在交互的Activity
 - 与前台Activity绑定的service
-- 调用了startForeground（）方法的service
+- 调用了`startForeground()`方法的service
 - 正在执行onCreate()，onStart()，onDestroy()方法的service
 - 进程中包含正在执行的onReceive()方法的BroadcastReceiver
 
@@ -27,7 +27,7 @@ Android系统中，当系统内存不足时，Android系统将根据进程的优
 
 ### 3. 服务进程
 
-- 已经启动的服务
+- 已经启动的服务。
 
 ### 4. 后台进程
 
@@ -35,4 +35,4 @@ Android系统中，当系统内存不足时，Android系统将根据进程的优
 
 ### 5. 空进程
 
-- 任何没有活动的进程
+- 任何没有活动的进程。

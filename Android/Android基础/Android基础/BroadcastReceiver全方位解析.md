@@ -38,7 +38,7 @@
 
 广播发送者和广播接收者的执行是**异步**的，发出去的广播不会关心是否有无接收者接收，也不确定接收者到底是何时才能接收到。
 
-#### 四、具体使用
+### 四、具体使用
 
 #### 4.1 自定义广播接收者BroadcastReceiver
 
@@ -77,8 +77,25 @@
 
 **注意：**
 
-1. 动态广播最好在Activity的onResume()，onPause()注销。
+1. 动态广播最好在Activity的onResume()注册，onPause()注销。
 2. 对于动态广播，有注册必然得有注销，否则会导致内存泄露。
+3. 重复注册，重复注销也不允许。
+
+**解释为什么最好在onResume()注册，onPause()注销：**
+
+![Activity生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Activity生命周期.png)
+
+Activity生命周期的方法是成对出现的：
+
+- `onCreate()`和`onDestroy()`
+- `onStart()`和`onStop()`
+- `onResume()`和`onPause()`
+
+**在onResume()注册，onPause()注销是因为onPause()在App死亡前一定会被执行，从而保证广播在App死亡前一定被注销，从而防止内存泄露。**
+
+1. 不在`onCreate()`和`onDestroy()`或`onStart()`和`onStop()`注册、注销是因为：当系统因为内存不足（优先级更高的应用需要内存），要回收Activity占用的资源时，Activity在执行完onPause()方法后就会被销毁，有些生命周期方法onStop()和onDestroy()就不会被执行。当再回到此Activity时，是从onCreate方法开始执行。
+2. 假设将广播的注销放在onStop()，onDestroy()方法里的话，有可能在Activity被销毁后还未执行onStop，onDestroy()方法，即广播仍还未注销，从而导致内存泄露。
+3. 但是，onPause()一定会被执行，从而保证了广播在App死亡前一定会被注销，从而防止内存泄露。
 
 ##### 4.2.3 两种注册方式的区别
 
@@ -139,10 +156,27 @@
 ###### 3.有序广播
 
 - `sendOrderedBroadcast(intent)`
+- 有序是对广播接受者而言的。
 - 按照广播接收者的优先级（priority）按照顺序接收。
 - 先接受广播的接收者可以对广播就行截断（abort）和修改。
 
 ###### 4.应用内广播（本地广播）
+
+- 背景：Android中的广播可以跨App直接通信（exported对于有intent-filter情况下默认值为true）。
+- 可能出现的问题：1.其他App针对性发出与当前App intent-filter相匹配的广播，由此导致当前App不断接收广播并处理。2.其他App注册与当前App一致的intent-filter用于接收广播，获取广播具体信息。即会出现安全性和效率问题。
+- 解决方案：使用应用内广播。
+
+具体使用：
+
+1.将全局广播设置为局部广播
+
+1. 注册广播时将exported属性设置为false，使得非本App内部发出的此广播不被接收。
+2. 在广播发送和接收时，增设相应权限，用于权限验证。
+3. 发送广播时指定该广播接收器所在的包名，此广播将只会发送到此包中的App内与之相匹配的有效广播接收器（通过`intent.setPackage(packageName)`指定包名）。
+
+2.使用封装好的LocalBroadcastManager
+
+- 通过LocalBroadcastManager发送的应用内广播，只能通过LocalBroadcastManager动态注册，不能静态注册。
 
 ```java
 localBroadcastManager = LocalBroadcastManager.getInstance(this);
@@ -152,3 +186,12 @@ localBroadcastManager = LocalBroadcastManager.getInstance(this);
 ###### 5.粘性广播
 
 在Android5.0中已经失效，所以不建议使用。
+
+### 五、特别注意
+
+对于不同注册方式的广播接收器回调onReceive（Context context, Intent intent）中的context返回值是不一样的：
+
+- 静态注册（全局+应用内广播）：返回context类型是ReceiverRestrictedContext。
+- 全局广播的动态注册：返回context类型是Activity Context。
+- 应用内广播的动态注册（LocalBroadcastManager方式）：返回context类型是Application Context。
+- 应用内广播的动态注册（非LocalBroadcastManager方式）：返回context类型是：Activity Context。

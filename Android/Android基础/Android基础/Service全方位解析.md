@@ -42,6 +42,14 @@ Service默认并不会运行在子线程中，也不会运行在一个独立的�
 
 每次客户端调用startService()方法启动该Service都会回调该方法（多次调用）。一旦这个方法执行，service就执行并且在后台长期执行。通过stopService()和stopSelf()来停止服务。
 
+注意：
+
+onStartCommand()必须返回一个整数，描述系统在杀死服务后应该如何继续运行：
+
+- START_NOT_STICKY：不会重建服务，除非还存在未发送的intent。当服务不再是必须的，并且应用程序能够简单地重启那些未完成的工作，这是避免服务运行的最安全的选项。
+- START_STICKY：重建服务，调用onStartCommand()，但不会再次送入上一个intent，而是用null intent来调用onStartCommand()。除非还有启动服务的intent未发送完，那么这些剩下的intent会继续发送（适用于媒体播放器类似服务，它们不执行命令，但需要一直运行并随时待命）。
+- START_REDELIVER_INTENT：重建服务，用上一个已送过的intent调用onStartCommand()。任何未发送完的intent也都会依次送入（适用于那些需要立即恢复工作的活跃服务，比如下载文件）。
+
 **onBind()：**
 
 当组件调用bindService()想要绑定到service时（比如想要执行进程间通讯）系统调用此方法（一次调用，一旦绑定后，下次再调用bindService()就不会回调该方法）。在实现中，必须提供一个但会一个IBinder来使客户端能够使用它与service通讯，必须实现这个方法，如果不允许绑定，那么应返回null。
