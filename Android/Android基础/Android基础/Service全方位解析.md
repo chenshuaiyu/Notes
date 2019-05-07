@@ -62,6 +62,20 @@ onStartCommand()必须返回一个整数，描述系统在杀死服务后应该�
 
 系统在service不再被使用并要销毁时调用此方法（一次调用）。Service应在此方法中释放资源，比如线程，已注册的侦听器，接收器等，这是Service收到的最后一个调用。
 
+AndroidManifest里声明Service：
+
+| 属性               | 说明                                         | 备注                                                 |
+| ------------------ | -------------------------------------------- | ---------------------------------------------------- |
+| android:name       | Service的类名                                |                                                      |
+| android:label      | Service的名字                                | 若不设置，默认为Service类名                          |
+| android:icon       | Service的图标                                |                                                      |
+| android:permission | Service的权限                                | 有提供了该权限的应用才能控制或连接此服务             |
+| android:process    | 表示该服务是否在另一个进程中运行（远程服务） | 不设置默认为本地服务；remote则设置为远程服务         |
+| android:enabled    | 系统默认启动                                 | true：Service将会默认被系统启动；不设置则默认为false |
+| android:exported   | 该服务能否被其它应用程序所控制或连接         | 不设置默认此项为false                                |
+
+
+
 #### 三种不同情况下的Service的生命周期情况：
 
 ##### 1.startService/stopService
@@ -91,4 +105,20 @@ onStartCommand()必须返回一个整数，描述系统在杀死服务后应该�
 
 同时startService和bindService时，必须先调用unBindService后再stopService才会停止服务。
 
-### 四、IntentService
+### 四、远程服务Service
+
+#### 1. 远程服务与本地服务的区别
+
+远程服务和本地服务最大的区别：远程服务Service与调用者不在同一个进程里（即远程Service是运行在另外一个进程）；而本地服务则是与调用者运行在同一个进程里。
+
+#### 2. 使用场景
+
+多个应用程序共享同一个后台服务（远程服务），即一个远程服务Service与多个应用程序的组件进行跨进程通信。
+
+### 五、Service与Thread的区别
+
+Service与Thread无任何关系，之所以把它们联系起来，主要是因为Service的后台概念。后台任务运行完全不依赖UI，即使Activity被销毁/程序被关闭，只要进程还在，后台任务就可继续运行。
+
+一般会将Service和Thread联合着用，即在Service中再创建一个子线程（工作线程）去处理耗时操作逻辑。
+
+### 六、IntentService
