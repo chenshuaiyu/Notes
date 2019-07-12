@@ -83,7 +83,7 @@
 
 **解释为什么最好在onResume()注册，onPause()注销：**
 
-![Activity生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Activity生命周期.png)
+![Activity生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android基础/assets/Activity生命周期.png)
 
 Activity生命周期的方法是成对出现的：
 
