@@ -26,7 +26,7 @@
 - 当活动被销毁时，与它相关联的碎片就会进入到销毁状态。
 - 通过调用FragmentTransaction的remove()、replace()方法将碎片从活动中移除，但如果在事务提交之前并没有调用addToBackStack()方法，这时的碎片也会进入到销毁状态。
 
-![Fragment生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Fragment生命周期.png)
+![Fragment生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android基础/assets/Fragment生命周期.png)
 
 ```java
 onAttach()//当Fragment与Activity建立关联的时候调用
