@@ -125,7 +125,7 @@ Activity生命周期的方法是成对出现的：
 - action匹配就会接受广播
 - 发送者与接受者必须具有相对应的权限
 
-[有关权限](https://blog.csdn.net/mafei852213034/article/details/79934375)
+[有关权限](https://blog.csdn.net/mafei852213034/article/details/79934375)（引用自[丿奔跑的蜗牛](https://me.csdn.net/mafei852213034)）
 
 ###### 2.系统广播
 
