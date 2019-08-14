@@ -16,11 +16,11 @@
 
 Collection和Map是Java集合框架的根接口。
 
-![集合框架继承](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java进阶/assets/Collection继承体系.png)
+![集合框架继承](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/Collection继承体系.png)
 
 ArrayList，LinkedList，HashSet，TreeSet是经常会用到的集合类。
 
-![Map继承体系](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java进阶/assets/Map继承体系.png)
+![Map继承体系](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/Map继承体系.png)
 
 Map实现类用于保存具有映射关系的数据。HashMap，TreeMap是经常会用到的集合类。
 
