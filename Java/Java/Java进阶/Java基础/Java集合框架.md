@@ -66,7 +66,9 @@ ArrayList是一个相对来说比较简单的数据结构，最重要的一点�
 3. 按数组下标访问元素——get(i)/set(i, e)的性能很高，这是数组的基本优势。
 4. 直接在数组末尾加入元素，add(e)的性能也高，但如果按下标插入，删除元素——add(i,e),remove(i),remove(e)，则要用System.arraycopy()来移动部分受影响的元素，性能变差，这是基本劣势。
 
-RandomAccess，Cloneable, java.io.Serializable接口都是**标记接口**，实现了RandomAccess接口表示随机访问，使用foreach比Iterator要快。
+RandomAccess，Cloneable, java.io.Serializable接口都是**标记接口**。
+
+实现了RandomAccess接口表示随机访问，使用foreach比Iterator要快。否则，使用使用Iterator比foreach要快。
 
 **序列化：**
 
@@ -293,7 +295,7 @@ Node<E> node(int index) {
 }
 ```
 
-### 三、add和LinkedLast函数
+### 三、add和linkedLast函数
 
 ```java
 public boolean add(E e) {
@@ -332,10 +334,10 @@ Capacity是bucket的大小，Load factor是bucket填满程度的最大比例。�
 
 ### 三、put函数的实现
 
-1. 对key的hashCode()做hash()，然后在计算index
+1. 对key的hashCode()做hash()，然后再计算index
 2. 如果没碰撞直接放到bucket里
 3. 如果碰撞了，以链表的形式存在buckets后
-4. 如果碰撞导致链表过长（大于等于TREEIFY_THRESHOLD），就把链表转换成红黑树
+4. 如果碰撞导致链表过长（大于等于TREEIFY_THRESHOLD=8），就把链表转换成红黑树
 5. 如果节点已经存在就替换old value（保证key的唯一性）
 6. 如果bucket满了（超过`load factor × current capacity`），就要resize。
 

@@ -79,10 +79,11 @@ public class MyFragment extends Fragment {
 ```java
 FragmentManager manager = getSupportFragmentManager();
 FragmentTransaction transaction = manager.beginTransaction();
-transaction.add(R.id.myframelayout, fragment1).commit();
+transaction.add(R.id.myframelayout, fragment)
+    .commit();
 ```
 
-注意：调用add/replace/hide/show以后都要commit其效果才会在屏幕上显示出来。
+注意：调用`add`/`replace`/`hide`/`show`以后都要`commit()`其效果才会在屏幕上显示出来。
 
 ### 4. Fragment的回退栈
 
@@ -101,14 +102,14 @@ tx.commit();
 虽然将当前事务添加到了回退栈，所以Fragment实例不会销毁，但是**视图层次会被销毁，即会调用onDestroyView和onCreateView**，
 
 ```java
-FragmentThree fThree = new FragmentThree();  
-FragmentManager fm = getFragmentManager();  
-FragmentTransaction tx = fm.beginTransaction();  
-tx.hide(this);  
-tx.add(R.id.id_content , fThree, "THREE");  
-//tx.replace(R.id.id_content, fThree, "THREE");  
-tx.addToBackStack(null);  
-tx.commit();  
+FragmentThree fThree = new FragmentThree();
+FragmentManager fm = getFragmentManager();
+FragmentTransaction tx = fm.beginTransaction();
+tx.hide(this);
+tx.add(R.id.id_content , fThree, "THREE");
+//tx.replace(R.id.id_content, fThree, "THREE");
+tx.addToBackStack(null);
+tx.commit();
 ```
 
 如果不希望视图重绘，就应该使用hide方法。
