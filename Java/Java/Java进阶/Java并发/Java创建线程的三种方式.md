@@ -2,10 +2,15 @@
 
 ### 1. 继承Thead创建线程类。
 
+1. 定义Thread类的子类，并重写该类的run方法，该run方法的方法体就代表了线程要完成的任务，因此把run()方法称为执行体。
+2. 创建Thread子类的实例，即创建了线程对象。
+3. 调用线程对象的start()方法来启动该线程。
+
 ```java
 public class FirstThreadTest extends Thread {
     int i = 0;
     
+    @Override
     public void run() {
         for (; i < 100; i++) {
             System.out.println(getName() + "  " + i);
@@ -26,10 +31,15 @@ public class FirstThreadTest extends Thread {
 
 ### 2. 通过Runnable接口创建线程类。
 
+1. 定义Runnable接口的实现类，并重写该接口的run方法，该run方法的方法体同样是该线程的线程执行体。
+2. 创建Runnable实现类的实例，并以此实例作为Thread的target来创建Thread对象，该Thread对象才是真正的线程对象。
+3. 调用线程对象的start方法来启动该线程。
+
 ```java
 public class RunnableThreadTest implements Runnable {
     private int i;
 
+    @Override
     public void run() {
         for (i = 0; i < 100; i++) {
             System.out.println(Thread.currentThread().getName() + " " + i);
@@ -88,3 +98,11 @@ public class CallableThreadTest implements Callable<Integer> {
     }
 }
 ```
+
+### 4. 创建线程的三种方式的对比
+
+| 方式              | 优点                                                         | 缺点                                                         |
+| ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Thread            | 编写简单，如果需要访问当前线程，则无需使用Thread.currentThread()方法，直接使用this即可获得当前线程 | 线程类已经继承了Thread类，不能再继承其他父类                 |
+| Runnable/Callable |                                                              | 编写复杂，如果需要访问当前线程，则必须使用Thread.currentThread()方法 |
+
