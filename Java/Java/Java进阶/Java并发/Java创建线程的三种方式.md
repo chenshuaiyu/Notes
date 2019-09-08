@@ -104,5 +104,5 @@ public class CallableThreadTest implements Callable<Integer> {
 | 方式              | 优点                                                         | 缺点                                                         |
 | ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Thread            | 编写简单，如果需要访问当前线程，则无需使用Thread.currentThread()方法，直接使用this即可获得当前线程 | 线程类已经继承了Thread类，不能再继承其他父类                 |
-| Runnable/Callable |                                                              | 编写复杂，如果需要访问当前线程，则必须使用Thread.currentThread()方法 |
+| Runnable/Callable | 还可以继承其他类，且多个线程可以共享同一个target对象，非常适合多个相同线程看来处理同一份资源的情况。 | 编写复杂，如果需要访问当前线程，则必须使用Thread.currentThread()方法 |
 
