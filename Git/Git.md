@@ -7,7 +7,7 @@ SVN和Git的区别：
 - SVN是集中式版本控制系统，版本库是集中放在中央服务器的，工作时首先要从中央服务器哪里得到最新的版本，之后再推送到中央服务器。集中式版本控制系统是必须联网才能工作，如果在局域网还可以，带宽够大，速度够快。
 - GIt是分布式版本控制系统，没有中央服务器，每个人的电脑就是一个完整的版本库，这样就不需要联网了，因为版本都是在自己的电脑上。多人如何协作时，自己在电脑上改了文件A，其他人也在电脑上改了文件A，这时，只需把各自的修改推送给对方，就可以互相看到对方的修改了。
 
-![git工作流程](E:\Github仓库\Notes\Git\assets\git工作流程.png)
+![git工作流程](https://github.com/chenshuaiyu/Notes/blob/master/Git/assets/git工作流程.png)
 
 - WorkSpace：工作区
 - Index / Stage：暂存区
@@ -103,8 +103,3 @@ git stash pop 恢复的同时把stash内容删除
 git remote 查看远程库的信息
 git remote –v 查看远程库的详细信息
 ```
-
-
-
-
-

@@ -68,7 +68,7 @@ ArrayList是一个相对来说比较简单的数据结构，最重要的一点�
 
 RandomAccess，Cloneable, java.io.Serializable接口都是**标记接口**。
 
-实现了RandomAccess接口表示随机访问，使用foreach比Iterator要快。否则，使用使用Iterator比foreach要快。
+实现了RandomAccess接口表示随机访问，使用foreach比Iterator要快。否则，使用Iterator比foreach要快。
 
 **序列化：**
 
@@ -318,13 +318,24 @@ void linkLast(E e) {
 
 每次插入都是移动指针，和ArrayList的拷贝数组来说效率要高上不少。
 
+# HashTable
+
+- 底层数组+链表实现，key/value都不能为null，线程安全，实现线程安全的方式是在修改数据时锁住整个HashTable，效率低，ConcurrentHashMap做了相关优化
+- 初始size为**11**，扩容：newsize = oldsize*2+1
+- 计算index的方法：index = (hash & 0x7FFFFFFF) % tab.length
+
 # HashMap
 
 ### 一、概述
 
-基于Map接口，允许null键/值，非同步，无序。
+- 基于Map接口，允许null键/值，非同步，无序。
+- 初始size为16，扩容：newsize = oldsize*2，size一定为2的n次幂
+- 扩容针对整个Map，每次扩容时，原来数组中的元素依次重新计算存放位置，并重新插入
+- 插入元素后才判断该不该扩容，有可能无效扩容（插入后如果扩容，如果没有再次插入，就会产生无效扩容）
+- 当Map中元素总数超过Entry数组的75%，触发扩容操作，为了减少链表长度，元素分配更均匀
+- 计算index方法：index = hash & (tab.length – 1)
 
-### 二、两个重要参数
+二、两个重要参数
 
 容量（Capacity），负载因子（Load factor）
 
@@ -567,11 +578,13 @@ final Node<K,V>[] resize() {
 
 如果超过了负载因子（默认是0.75），则会resize一个原来长度两倍的HashMap，并且会重新调用hash方法。
 
-### 九、ConcurrentHashMap
+# ConcurrentHashMap
 
 
 
-未学。。。
+
+
+
 
 # LinkedHashMap
 
@@ -880,3 +893,7 @@ public boolean add(E e) {
 ### 五、总结
 
 HaspSet就是记住HashMap来实现的。
+
+# PriorityQueue
+
+优先级队列，一个基于优先级堆的无界优先级队列。 
