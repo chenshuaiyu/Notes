@@ -44,7 +44,7 @@ git reflog	获取所有版本号
 
 ### 三、工作区与暂存区的区别
 
-- 工作区：工作文件下的所有文件（.git文件夹除外）。
+- 工作区：工作文件夹下的所有文件（.git文件夹除外）。
 - 版本库：.git文件夹。
 - Git创建第一个分支master，以及指向master的一个指针HEAD。
 
@@ -57,7 +57,7 @@ git commit -m ""	一次性将暂存区所有修改提交到分支上
 ```
 git checkout -- filename 
 1：把文件在工作区做的修改全部撤销
-2；此file已被删除，执行命令后，文件恢复
+2：此file已被删除，执行命令后，文件恢复
 ```
 
 ### 五、远程仓库
@@ -94,12 +94,12 @@ git branch -d dev	删除dev分支
 git stash	隐藏工作现场
 git stash list	查看工作现场
 git stash apply	恢复工作现场，恢复后stash内容并不删除，需要使用命令git stash drop	删除
-git stash pop 恢复的同时把stash内容删除
+git stash pop	恢复的同时把stash内容删除
 ```
 
 ### 八、多人协作
 
 ```
-git remote 查看远程库的信息
-git remote –v 查看远程库的详细信息
+git remote	查看远程库的信息
+git remote –v	查看远程库的详细信息
 ```
