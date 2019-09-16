@@ -2,7 +2,7 @@
 
 ### 一、简介
 
-基于事件流的链式调用，实现异步操作的库。类似于AsyncTask、Handle的作用。
+基于事件流的链式调用，实现异步操作的库。类似于AsyncTask、Handler的作用。
 
 RxJava是基于一种拓展的观察者模式，有四种角色：
 
@@ -69,7 +69,7 @@ MainActivity: onComplete:
 | :------: | :-----------------: | :-------------: |
 | create() |       just()        |     defer()     |
 |          |     fromArray()     |     timer()     |
-|          |    fromIterator     |   interval()    |
+|          |   fromIterator()    |   interval()    |
 |          |       never()       | intervalRange() |
 |          |       empty()       |     range()     |
 |          |       error()       |   rangeLong()   |
