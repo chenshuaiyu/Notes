@@ -23,7 +23,16 @@ public Handler() {
 
 //分析2：Handler有参构造函数
 public Handler(Callback callback, boolean async) {
-    ...
+    //FIND_POTENTIAL_LEAKS标志用来检测 扩展继承Handler的类 是否存在潜在的内存泄漏
+    if (FIND_POTENTIAL_LEAKS) {
+        final Class<? extends Handler> klass = getClass();
+        //判断是否为 匿名类、成员类、局部类
+        if ((klass.isAnonymousClass() || klass.isMemberClass() || klass.isLocalClass()) &&
+            (klass.getModifiers() & Modifier.STATIC) == 0) {
+            Log.w(TAG, "The following Handler class should be static or leaks might occur: " +
+                  klass.getCanonicalName());
+        }
+    }
     
     //获取当前线程Looper对象，若线程无Looper对象则抛出异常
     mLooper = Looper.myLooper();
@@ -34,6 +43,9 @@ public Handler(Callback callback, boolean async) {
     }
     //绑定消息队列MessageQueue对象
     mQueue = mLooper.mQueue;
+    mCallback = callback;
+    //mAsynchronous用来设置消息是否异步，这意味着发送的消息将不受Looper同步设置的影响
+    mAsynchronous = async;
 }
 ```
 
@@ -57,6 +69,7 @@ private static void prepare(boolean quitAllowed) {
     if (sThreadLocal.get() != null) {
         throw new RuntimeException("Only one Looper may be created per thread");
     }
+    //quitAllowed参数从Looper传入MessageQueue用于quit方法
     sThreadLocal.set(new Looper(quitAllowed)); // ---> 分析1：Looper构造函数
 }
 
@@ -64,10 +77,12 @@ private static void prepare(boolean quitAllowed) {
 private Looper(boolean quitAllowed) {
     //创建一个MessageQueue与当前Looper相关联
     mQueue = new MessageQueue(quitAllowed);
-    
     mThread = Thread.currentThread();
 }
 ```
+
+ActivityThread下的main方法：
+
 
 ```java
 //Looper.prepareMainLooper()：主线程创建Looper和MessageQueue
@@ -111,7 +126,7 @@ public static void loop() {
         msg.target.dispatchMessage(msg); // ---> 分析4：dispatchMessage()
         
         //释放消息占用的资源
-        msg.recycleUnchecked();
+        msg.recycleUnchecked(); // ---> 分析5：recycleUnchecked()
     }
 }
 ```
@@ -119,6 +134,8 @@ public static void loop() {
 ```java
 //分析3：MessageQueue.next()
 Message next() {
+    int pendingIdleHandlerCount = -1; // -1 only during first iteration
+    
     //用于确定消息队列中是否还有消息，决定消息队列应处于出队消息状态或等待状态
     int nextPollTimeoutMillis = 0;
 
@@ -127,7 +144,7 @@ Message next() {
             Binder.flushPendingCommands();
         }
 
-        // nativePollOnce方法在native层，若是nextPollTimeoutMillis为-1，此时消息队列处于等待状态　
+        // nativePollOnce方法在native层，若是nextPollTimeoutMillis为-1，此时消息队列处于等待状态，线程阻塞
         nativePollOnce(ptr, nextPollTimeoutMillis);
 
         synchronized (this) {
@@ -135,8 +152,16 @@ Message next() {
             Message prevMsg = null;
             Message msg = mMessages;
 
+            if (msg != null && msg.target == null) {
+                //如果从队列里拿到的msg是个“同步分割栏”，那么就寻找其后第一个“异步消息”
+                do {
+                    prevMsg = msg;
+                    msg = msg.next;
+                } while (msg != null && !msg.isAsynchronous());
+            }
             if (msg != null) {
                 if (now < msg.when) {
+                    //如果有消息，但是时间还没到，或者没有消息的时候
                     nextPollTimeoutMillis = (int) Math.min(msg.when - now, Integer.MAX_VALUE);
                 } else {
                     //取出消息
@@ -148,6 +173,7 @@ Message next() {
                     }
                     msg.next = null;
                     if (DEBUG) Log.v(TAG, "Returning message: " + msg);
+                    //标记为已使用
                     msg.markInUse();
                     return msg;
                 }
@@ -155,7 +181,49 @@ Message next() {
                 //消息队列为等待状态
                 nextPollTimeoutMillis = -1;
             }
+            
+            if (mQuitting) {
+                dispose();
+                return null;
+            }
+
+            if (pendingIdleHandlerCount < 0
+                && (mMessages == null || now < mMessages.when)) {
+                pendingIdleHandlerCount = mIdleHandlers.size();
+            }
+            if (pendingIdleHandlerCount <= 0) {
+                // No idle handlers to run.  Loop and wait some more.
+                mBlocked = true;
+                continue;
+            }
+
+            if (mPendingIdleHandlers == null) {
+                mPendingIdleHandlers = new IdleHandler[Math.max(pendingIdleHandlerCount, 4)];
+            }
+            mPendingIdleHandlers = mIdleHandlers.toArray(mPendingIdleHandlers);
         }
+        
+        //IdleHandler的作用就是在队列空闲的时候干点事情，要使用IdleHandler就调用MessageQueue.addIdleHandler(IdleHandler handler)方法
+        for (int i = 0; i < pendingIdleHandlerCount; i++) {
+            final IdleHandler idler = mPendingIdleHandlers[i];
+            mPendingIdleHandlers[i] = null;
+
+            boolean keep = false;
+            try {
+                keep = idler.queueIdle();
+            } catch (Throwable t) {
+                Log.wtf(TAG, "IdleHandler threw exception", t);
+            }
+
+            if (!keep) {
+                synchronized (this) {
+                    mIdleHandlers.remove(idler);
+                }
+            }
+        }
+
+        pendingIdleHandlerCount = 0;
+        nextPollTimeoutMillis = 0;
     }
 }
 ```
@@ -163,6 +231,7 @@ Message next() {
 ```java
 //分析4：dispatchMessage()
 public void dispatchMessage(Message msg) {
+    //使用post方式发送的消息的执行优先级最高
     //msg.callback不为空，使用post(Runnable r)方式发送消息，
     if (msg.callback != null) {
         //回调Runnable的run方法
@@ -175,6 +244,31 @@ public void dispatchMessage(Message msg) {
         }
         //callback为空，使用sendMessage(Message msg)方式发送消息，回到Handler的handleMessage方法
         handleMessage(msg);
+    }
+}
+```
+
+```java
+//分析5：recycleUnchecked()
+void recycleUnchecked() {
+    flags = FLAG_IN_USE;
+    what = 0;
+    arg1 = 0;
+    arg2 = 0;
+    obj = null;
+    replyTo = null;
+    sendingUid = -1;
+    when = 0;
+    target = null;
+    callback = null;
+    data = null;
+
+    synchronized (sPoolSync) {
+        if (sPoolSize < MAX_POOL_SIZE) {
+            next = sPool;
+            sPool = this;
+            sPoolSize++;
+        }
     }
 }
 ```
@@ -245,6 +339,13 @@ private boolean enqueueMessage(MessageQueue queue, Message msg, long uptimeMilli
 //分析2：queue.enqueueMessage()
 //使用单链表管理消息队列
 boolean enqueueMessage(Message msg, long when) {
+    if (msg.target == null) {
+        throw new IllegalArgumentException("Message must have a target.");
+    }
+    if (msg.isInUse()) {
+        throw new IllegalStateException(msg + " This message is already in use.");
+    }
+    
     synchronized (this) {
         msg.markInUse();
         msg.when = when;
@@ -260,7 +361,7 @@ boolean enqueueMessage(Message msg, long when) {
             needWake = mBlocked && p.target == null && msg.isAsynchronous();
             Message prev;
 
-            //若消息队列里有消息，则根据消息创建的时间插入到队列中
+            //若消息队列里有消息，消息队列中的Message以when字段升序排列，则根据消息创建的时间插入到队列中
             for (;;) {
                 prev = p;
                 p = p.next;
@@ -298,7 +399,7 @@ mHandler.post(new Runnable() { // ---> 分析1：post()
 //分析1：post()
 public final boolean post(Runnable r)
 {
-    return  sendMessageDelayed(getPostMessage(r), 0); // ---> 分析2：getPostMessage(r)
+    return sendMessageDelayed(getPostMessage(r), 0); // ---> 分析2：getPostMessage(r)
 }
 
 //分析2：getPostMessage(r)
@@ -317,7 +418,7 @@ public void dispatchMessage(Message msg) {
     //msg.callback不为空，使用post(Runnable r)方式发送消息，
     if (msg.callback != null) {
         //回调Runnable的run方法
-        handleCallback(msg);
+        handleCallback(msg); // ---> 分析3：handleCallback(msg)
     } else {
         //通过Handler handler = new Handler(callback)方式传入的mCallback
         if (mCallback != null) {
@@ -329,6 +430,11 @@ public void dispatchMessage(Message msg) {
         handleMessage(msg);
     }
 }
+
+// ---> 分析3：handleCallback(msg)
+private static void handleCallback(Message message) {
+    message.callback.run();
+}
 ```
 
 ### 6.常见面试题
@@ -337,6 +443,8 @@ public void dispatchMessage(Message msg) {
 
 通过epoll机制监听文件I/O事件，在有message需要处理时，写入数据以唤醒线程，没有message处理时，让线程进入休眠状态。
 
+[Gityuan的回答](https://www.zhihu.com/question/34652589)
+
 #### 2.Message缓存池如何实现缓存？
 
 通过链表缓存，需要时从头部取出，回收时插入头部。
@@ -344,4 +452,3 @@ public void dispatchMessage(Message msg) {
 #### 3.子线程如何使用Handler机制？
 
 保证在子线程中先执行`Looper.prepare()`，再调用`Looper.loop()`开始消息循环。
-
