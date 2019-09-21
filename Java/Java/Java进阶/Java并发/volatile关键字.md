@@ -93,7 +93,6 @@ r = a * a;	//语句4
 #### 3.Java中的有序性
 
 - 可以通过volatile关键字来保证一定的有序性
-- 可以通过Synchronized和Lock保证有序性
 
 ### 五、深入理解volatile关键字
 
