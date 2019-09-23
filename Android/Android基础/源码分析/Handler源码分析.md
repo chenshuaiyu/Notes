@@ -385,6 +385,9 @@ boolean enqueueMessage(Message msg, long when) {
 }
 ```
 
+- SystemClock.uptimeMillis()：表示系统**开机到当前的时间总数**，单位是毫秒，但是，当系统进入深度睡眠（CPU休眠、屏幕休眠、设备等待外部输入）时间就会停止，但是不会受到时钟缩放、空闲或者其他节能机制的影响。
+- System.currentTimeMillis()：获取的是系统的时间，可以使用SystemClock.setCurrentTimeMillis(long millis)进行设置。如果使用System.currentTimeMillis()来获取当前时间进行计时，应该考虑监听ACTION_TIME_TICK, ACTION_TIME_CHANGED 和 ACTION_TIMEZONE_CHANGED这些广播ACTION，如果系统时间发生了改变，可以通过监听广播来获取。
+
 ### 5.使用post()发送消息到消息队列
 
 ```java
