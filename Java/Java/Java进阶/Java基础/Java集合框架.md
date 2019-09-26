@@ -892,7 +892,7 @@ public boolean add(E e) {
 
 ### 五、总结
 
-HaspSet就是记住HashMap来实现的。
+HashSet就是记住HashMap来实现的。
 
 # PriorityQueue
 
