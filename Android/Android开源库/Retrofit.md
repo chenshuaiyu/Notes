@@ -1,4 +1,4 @@
-Retrofit
+# Retrofit
 
 ## 一、使用
 
@@ -139,14 +139,12 @@ api.get(1)
 6. 通过回调执行器切换线程（子线程 -> 主线程）
 7. 用户在主线程处理返回结果
 
-| 角色                       | 作用                                                         | 备注                       |
-| -------------------------- | ------------------------------------------------------------ | -------------------------- |
-| 网络请求执行器Call         | 创建HTTP网络请求                                             | Retrofit默认为OkHttp3.Call |
-| 网络请求适配器CallAdapter  | 网络请求执行器Call的适配器，将默认的网络请求执行器OkHttpCall转换成适合被不同平台来调用的网络请求形式 |                            |
-| 数据转换器Converter        | 将返回数据解析成需要的数据类型                               |                            |
-| 回调执行器CallBackExecutor | 线程切换（子线程 -> 主线程）                                 |                            |
-
-
+| 角色                       | 作用                                                         | 备注                                                         |
+| -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 网络请求执行器Call         | 创建HTTP网络请求                                             | Retrofit默认为OkHttp3.Call                                   |
+| 网络请求适配器CallAdapter  | 网络请求执行器Call的适配器，将默认的网络请求执行器OkHttpCall转换成适合被不同平台来调用的网络请求形式 |                                                              |
+| 数据转换器Converter        | 将返回数据解析成需要的数据类型                               | 支持XMl、Gson、JSON、protobuf等等                            |
+| 回调执行器CallBackExecutor | 线程切换（子线程 -> 主线程）                                 | 将最后OkHttp的请求结果通过callbackExecutor使用Handler异步回调传回主线程 |
 
 使用Retrofit的使用步骤：
 
@@ -170,66 +168,59 @@ Retrofit retrofit = new Retrofit.Builder()
 5. .build();
 ```
 
-#### 步骤一
+#### 1.步骤一
 
 ```java
 public final class Retrofit {
-  
-private final Map<Method, ServiceMethod> serviceMethodCache = new LinkedHashMap<>();
-  // 网络请求配置对象（对网络请求接口中方法注解进行解析后得到的对象）
-  // 作用：存储网络请求相关的配置，如网络请求的方法、数据转换器、网络请求适配器、网络请求工厂、基地址等
-  
-  private final HttpUrl baseUrl;
-  // 网络请求的url地址
+  //网络请求配置对象（对网络接口中方法注解进行解析后得到的对象）
+  //作用：存储网络请求相关的配置，如网络请求的方法、数据转换器、网络请求适配器、网络请求工厂、基地址等
+  private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-  private final okhttp3.Call.Factory callFactory;
-  // 网络请求器的工厂
-  // 作用：生产网络请求器（Call）
-  // Retrofit是默认使用okhttp
-  
-   private final List<CallAdapter.Factory> adapterFactories;
-  // 网络请求适配器工厂的集合
-  // 作用：放置网络请求适配器工厂
-  // 网络请求适配器工厂作用：生产网络请求适配器（CallAdapter）
-  // 下面会详细说明
+  //网络请求器的工厂
+  //作用：生产网络请求器（Call）
+  //Retrofit是默认使用okhttp
+  final okhttp3.Call.Factory callFactory;
+    
+  //网络请求的url地址
+  final HttpUrl baseUrl;
+    
+  //数据转换器工厂的集合
+  //作用：放置数据转换器工厂
+  //数据转换器工厂作用：生产数据转换器（converter）
+  final List<Converter.Factory> converterFactories;
+    
+  //网络请求适配器工厂的集合
+  //作用：放置网络请求适配器工厂
+  //网络请求适配器工厂作用：生产网络请求适配器（CallAdapter）
+  final List<CallAdapter.Factory> callAdapterFactories;
+    
+  //回调方法执行器
+  final @Nullable Executor callbackExecutor;
+    
+  //标志位
+  //作用：是否提前对业务接口中的注解进行验证转换的标志位
+  final boolean validateEagerly;
 
-
-  private final List<Converter.Factory> converterFactories;
-  // 数据转换器工厂的集合
-  // 作用：放置数据转换器工厂
-  // 数据转换器工厂作用：生产数据转换器（converter）
-
-  private final Executor callbackExecutor;
-  // 回调方法执行器
-
-private final boolean validateEagerly; 
-// 标志位
-// 作用：是否提前对业务接口中的注解进行验证转换的标志位
-
-
-<-- Retrofit类的构造函数 -->
-Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,  
-      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,  
-      Executor callbackExecutor, boolean validateEagerly) {  
-    this.callFactory = callFactory;  
-    this.baseUrl = baseUrl;  
-    this.converterFactories = unmodifiableList(converterFactories); 
-    this.adapterFactories = unmodifiableList(adapterFactories);   
-    // unmodifiableList(list)近似于UnmodifiableList<E>(list)
-    // 作用：创建的新对象能够对list数据进行访问，但不可通过该对象对list集合中的元素进行修改
-    this.callbackExecutor = callbackExecutor;  
-    this.validateEagerly = validateEagerly;  
-  ...
-  // 仅贴出关键代码
+  //Retrofit构造函数
+  Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
+      List<Converter.Factory> converterFactories, List<CallAdapter.Factory> callAdapterFactories,
+      @Nullable Executor callbackExecutor, boolean validateEagerly) {
+    this.callFactory = callFactory;
+    this.baseUrl = baseUrl;
+    this.converterFactories = converterFactories; // Copy+unmodifiable at call site.
+    this.callAdapterFactories = callAdapterFactories; // Copy+unmodifiable at call site.
+    this.callbackExecutor = callbackExecutor;
+    this.validateEagerly = validateEagerly;
+  }
 }
 ```
 
 配置：
 
-1. serviceMethod：包含所有网络请求信息的对象
+1. serviceMethodCache：包含所有网络请求信息的对象
 2. baseUrl：网络请求的url地址
 3. callFactory：网络请求工厂
-4. adapterFactories：网络请求适配器工厂的集合
+4. callAdapterFactories：网络请求适配器工厂的集合
 5. converterFactories：数据转换器工厂的集合
 6. callbackExecutor：回调方法执行器
 
@@ -238,37 +229,34 @@ Retrofit(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
 1. Call在Retrofit里默认是OkHttpCall。
 2. 在Retrofit中提供四种CallAdapterFactory：ExecutorCallAdapterFactory（默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJavaCallAdapterFactory。
 
-作用：将默认的网络执行请求器（OkHttpCall转换成适合被不同平台来调用的网络请求执行器的模式）
+作用：将默认的网络执行请求器（OkHttpCall）转换成适合被不同平台来调用的网络请求执行器的模式。
 
-#### 步骤二
+原因：一开始Retrofit只打算利用OkHttpCall通过ExecutorCallbackCall切换线程，但后来发现RxJava更加方便（不需要Handler来切换线程）。
+
+#### 2.步骤二
 
 ```java
 public static final class Builder {
-    private Platform platform;
-    private okhttp3.Call.Factory callFactory;
-    private HttpUrl baseUrl;
-    private List<Converter.Factory> converterFactories = new ArrayList<>();
-    private List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
-    private Executor callbackExecutor;
-    private boolean validateEagerly;
+  private Platform platform;
+  private okhttp3.Call.Factory callFactory;
+  private HttpUrl baseUrl;
+  private List<Converter.Factory> converterFactories = new ArrayList<>();
+  private List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
+  private Executor callbackExecutor;
+  private boolean validateEagerly;
 
-// 从上面可以发现， Builder类的成员变量与Retrofit类的成员变量是对应的
-// 所以Retrofit类的成员变量基本上是通过Builder类进行配置
-// 开始看步骤1
-
-<-- 步骤1 -->
-// Builder的构造方法（无参）
- public Builder() {
+  //Builder有参构造方法
+  Builder(Platform platform) {
+  	this.platform = platform;
+  }
+    
+  //Builder无参构造方法
+  public Builder() {
       this(Platform.get());
-// 用this调用自己的有参构造方法public Builder(Platform platform) ->>步骤5（看完步骤2、3、4再看）
-// 并通过调用Platform.get（）传入了Platform对象
-// 继续看Platform.get()方法 ->>步骤2
-// 记得最后继续看步骤5的Builder有参构造方法
-    }
-...
+  }
+  ...
 }
 
-<-- 步骤2 -->
 class Platform {
 
   private static final Platform PLATFORM = findPlatform();
