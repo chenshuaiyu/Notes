@@ -80,3 +80,67 @@
 
 ### 12. ==、equals、hashcode的区别和联系
 
+1. ==是比较内存地址
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        String s1 = "hello java";
+        String s2 = "hello java";
+        String s3 = new String("hello java");
+        System.out.println(s1 == s2); //true
+        System.out.println(s1 == s3); //false
+        System.out.println(s1.equals(s3)); //true
+    }
+}
+```
+
+- s1== s2为true，对应常量池中同一个地址。
+- s1== s2为false，new产生的对应在堆中，s3是堆中变量的引用，而s1是常量池中的引用。
+
+2. equals是Object类中的方法
+
+```java
+public boolean equals(Object obj) {
+    return (this == obj);
+}
+```
+
+String源码中equals的实现：
+
+```java
+public boolean equals(Object anObject) {
+    if (this == anObject) {
+        return true;
+    }
+    if (anObject instanceof String) {
+        String anotherString = (String)anObject;
+        int n = value.length;
+        if (n == anotherString.value.length) {
+            char v1[] = value;
+            char v2[] = anotherString.value;
+            int i = 0;
+            while (n-- != 0) {
+                if (v1[i] != v2[i])
+                    return false;
+                i++;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+3. hashcode
+
+```java
+public native int hashCode();
+```
+
+**equals与hashcode的关系**：
+
+1. 如果两个对象equals，hashcode一定相等。 
+2. 如果两个对象不equals，他们的hashcode有可能相等。 
+3. 如果两个对象hashcode相等，他们不一定equals。 
+4. 如果两个对象hashcode不相等，他们一定不equals。 

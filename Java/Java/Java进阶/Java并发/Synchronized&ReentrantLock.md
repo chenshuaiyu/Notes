@@ -161,7 +161,7 @@ Thread-1获得锁
 1. Lock是一个接口，而synchronized是Java关键字，是内置的语言实现。
 2. synchronized在发生异常时，会自动释放线程所占有的锁，因此不会导致死锁现象发生；而Lock发生异常时，如果没有主动通过unlock方法去释放锁，很可能造成死锁现象，因此使用Lock时需要在finally块中释放锁。
 3. Lock可以让等待锁的线程相应中断，而synchronized却不行，使用synchronized时，等待的线程会一直等待下去，不能响应中断。
-4. 通过Lock可以知道有没有成功获取锁，而synchronized去无法办到。
+4. 通过Lock可以知道有没有成功获取锁，而synchronized却无法办到。
 5. Lock可以提供多个线程进行读操作的效率。
 
 总结：ReentrantLock相比synchronized，增加了一些高级的功能，但也有一定缺陷。
@@ -180,7 +180,7 @@ hasQueuedThreads(); //判断是否有线程在等待该锁
 
 #### 2.两者在锁的相关概念上的区别：
 
-1. 可中断锁：Lock是中断锁，synchronized就不是中断锁。
+1. 可中断锁：Lock是中断锁，synchronized不是中断锁。
 2. 公平锁：Lock可以设置公平锁，synchronized是非公平锁。
 3. 读写锁：读写锁对一个资源（比如文件）的访问分为2个锁，一个读锁和一个写锁。正因为有了读写锁，才使得多个线程之间的读操作可以并发进行，不需要同步，而写操作需要同步进行，提高了效率。ReadWriteLock就会读写锁，它是一个接口，ReentrantReadWriteLock实现了这个接口。可以通过readLock()获取读锁，通过writeLock()获取写锁。
 4. 绑定多个条件：一个ReentrantLock可以同时绑定多个Condition对象，而在synchronized中，锁独享的wait()和notify()或notifyAll()方法可以实现一个隐含的条件，如果要和多余的一个条件关联的时候，就不得不额外添加一个锁，而ReentrantLock则无需这么做，只需要多次调用new Condition()方法即可。
