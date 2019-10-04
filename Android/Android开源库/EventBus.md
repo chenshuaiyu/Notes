@@ -163,6 +163,186 @@ public static EventBus getDefault() {
 }
 ```
 
+### 构造函数
+
+```java
+public EventBus() {
+    this(DEFAULT_BUILDER);
+}
+
+EventBus(EventBusBuilder builder) {
+    logger = builder.getLogger();
+    subscriptionsByEventType = new HashMap<>();
+    typesBySubscriber = new HashMap<>();
+    stickyEvents = new ConcurrentHashMap<>();
+    mainThreadSupport = builder.getMainThreadSupport();
+    
+    //三个Poster
+    mainThreadPoster = mainThreadSupport != null ? mainThreadSupport.createPoster(this) : null;
+    backgroundPoster = new BackgroundPoster(this);
+    asyncPoster = new AsyncPoster(this);
+    
+    indexCount = builder.subscriberInfoIndexes != null ? builder.subscriberInfoIndexes.size() : 0;
+    subscriberMethodFinder = new SubscriberMethodFinder(builder.subscriberInfoIndexes,
+                                                        builder.strictMethodVerification, builder.ignoreGeneratedIndex);
+    logSubscriberExceptions = builder.logSubscriberExceptions;
+    logNoSubscriberMessages = builder.logNoSubscriberMessages;
+    sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+    sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+    throwSubscriberException = builder.throwSubscriberException;
+    eventInheritance = builder.eventInheritance;
+    executorService = builder.executorService;
+}
+```
+
+### mainThreadPoster( HandlerPoster)
+
+```java
+public class HandlerPoster extends Handler implements Poster {
+
+    private final PendingPostQueue queue;
+    private final int maxMillisInsideHandleMessage;
+    private final EventBus eventBus;
+    private boolean handlerActive;
+
+    protected HandlerPoster(EventBus eventBus, Looper looper, int maxMillisInsideHandleMessage) {
+        super(looper);
+        this.eventBus = eventBus;
+        this.maxMillisInsideHandleMessage = maxMillisInsideHandleMessage;
+        queue = new PendingPostQueue();
+    }
+
+    public void enqueue(Subscription subscription, Object event) {
+        PendingPost pendingPost = PendingPost.obtainPendingPost(subscription, event);
+        synchronized (this) {
+            queue.enqueue(pendingPost);
+            if (!handlerActive) {
+                handlerActive = true;
+                if (!sendMessage(obtainMessage())) {
+                    throw new EventBusException("Could not send handler message");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void handleMessage(Message msg) {
+        boolean rescheduled = false;
+        try {
+            long started = SystemClock.uptimeMillis();
+            while (true) {
+                PendingPost pendingPost = queue.poll();
+                if (pendingPost == null) {
+                    synchronized (this) {
+                        // Check again, this time in synchronized
+                        pendingPost = queue.poll();
+                        if (pendingPost == null) {
+                            handlerActive = false;
+                            return;
+                        }
+                    }
+                }
+                eventBus.invokeSubscriber(pendingPost);
+                long timeInMethod = SystemClock.uptimeMillis() - started;
+                if (timeInMethod >= maxMillisInsideHandleMessage) {
+                    if (!sendMessage(obtainMessage())) {
+                        throw new EventBusException("Could not send handler message");
+                    }
+                    rescheduled = true;
+                    return;
+                }
+            }
+        } finally {
+            handlerActive = rescheduled;
+        }
+    }
+}
+```
+
+### backgroundPoster
+
+```java
+final class BackgroundPoster implements Runnable, Poster {
+
+    private final PendingPostQueue queue;
+    private final EventBus eventBus;
+
+    private volatile boolean executorRunning;
+
+    BackgroundPoster(EventBus eventBus) {
+        this.eventBus = eventBus;
+        queue = new PendingPostQueue();
+    }
+
+    public void enqueue(Subscription subscription, Object event) {
+        PendingPost pendingPost = PendingPost.obtainPendingPost(subscription, event);
+        synchronized (this) {
+            queue.enqueue(pendingPost);
+            if (!executorRunning) {
+                executorRunning = true;
+                eventBus.getExecutorService().execute(this);
+            }
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            try {
+                while (true) {
+                    PendingPost pendingPost = queue.poll(1000);
+                    if (pendingPost == null) {
+                        synchronized (this) {
+                            // Check again, this time in synchronized
+                            pendingPost = queue.poll();
+                            if (pendingPost == null) {
+                                executorRunning = false;
+                                return;
+                            }
+                        }
+                    }
+                    eventBus.invokeSubscriber(pendingPost);
+                }
+            } catch (InterruptedException e) {
+                eventBus.getLogger().log(Level.WARNING, Thread.currentThread().getName() + " was interruppted", e);
+            }
+        } finally {
+            executorRunning = false;
+        }
+    }
+}
+```
+
+### asyncPoster
+
+```java
+class AsyncPoster implements Runnable, Poster {
+
+    private final PendingPostQueue queue;
+    private final EventBus eventBus;
+
+    AsyncPoster(EventBus eventBus) {
+        this.eventBus = eventBus;
+        queue = new PendingPostQueue();
+    }
+
+    public void enqueue(Subscription subscription, Object event) {
+        PendingPost pendingPost = PendingPost.obtainPendingPost(subscription, event);
+        queue.enqueue(pendingPost);
+        eventBus.getExecutorService().execute(this);
+    }
+
+    @Override
+    public void run() {
+        PendingPost pendingPost = queue.poll();
+        if(pendingPost == null) {
+            throw new IllegalStateException("No pending post available");
+        }
+        eventBus.invokeSubscriber(pendingPost);
+    }
+}
+```
+
 ### register()
 
 ```java
@@ -253,7 +433,7 @@ private void subscribe(Object subscriber, SubscriberMethod subscriberMethod) {
                 Class<?> candidateEventType = entry.getKey();
                 //是该类的父类
                 if (eventType.isAssignableFrom(candidateEventType)) {
-                    //该事件类型最新的时间发送给当前订阅者
+                    //该事件类型最新的事件发送给当前订阅者
                     Object stickyEvent = entry.getValue();
                     checkPostStickyEventToSubscription(newSubscription, stickyEvent);
                 }
@@ -262,6 +442,57 @@ private void subscribe(Object subscriber, SubscriberMethod subscriberMethod) {
             Object stickyEvent = stickyEvents.get(eventType);
             checkPostStickyEventToSubscription(newSubscription, stickyEvent);
         }
+    }
+}
+```
+
+### checkPostStickyEventToSubscription()
+
+```java
+private void checkPostStickyEventToSubscription(Subscription newSubscription, Object stickyEvent) {
+    if (stickyEvent != null) {
+        // If the subscriber is trying to abort the event, it will fail (event is not tracked in posting state)
+        // --> Strange corner case, which we don't take care of here.
+        postToSubscription(newSubscription, stickyEvent, isMainThread());
+    }
+}
+```
+
+### postToSubscription()
+
+```java
+private void postToSubscription(Subscription subscription, Object event, boolean isMainThread) {
+    switch (subscription.subscriberMethod.threadMode) {
+        case POSTING:
+            invokeSubscriber(subscription, event);
+            break;
+        case MAIN:
+            if (isMainThread) {
+                invokeSubscriber(subscription, event);
+            } else {
+                mainThreadPoster.enqueue(subscription, event);
+            }
+            break;
+        case MAIN_ORDERED:
+            if (mainThreadPoster != null) {
+                mainThreadPoster.enqueue(subscription, event);
+            } else {
+                // temporary: technically not correct as poster not decoupled from subscriber
+                invokeSubscriber(subscription, event);
+            }
+            break;
+        case BACKGROUND:
+            if (isMainThread) {
+                backgroundPoster.enqueue(subscription, event);
+            } else {
+                invokeSubscriber(subscription, event);
+            }
+            break;
+        case ASYNC:
+            asyncPoster.enqueue(subscription, event);
+            break;
+        default:
+            throw new IllegalStateException("Unknown thread mode: " + subscription.subscriberMethod.threadMode);
     }
 }
 ```
@@ -308,6 +539,10 @@ private void unsubscribeByEventType(Object subscriber, Class<?> eventType) {
 
 ### post()
 
+1. currentPostingThreadState是ThreadLocal类型的，里面存储了PostingThreadState，而PostingThreadState中包含了一个eventQueue和其他一些标志位；
+2. 然后把传入的event，保存到了当前线程中的一个变量PostingThreadState的eventQueue中。
+3. 这里涉及到两个标志位，第一个是isMainThread，判断是否为UI线程；第二个是isPosting，作用是防止方法多次调用。
+
 ```java
 public void post(Object event) {
     //获取当前线程的Posting状态
@@ -345,7 +580,7 @@ private void postSingleEvent(Object event, PostingThreadState postingState) thro
     //分发事件的类型
     Class<?> eventClass = event.getClass();
     boolean subscriptionFound = false;
-    //响应订阅事件的父类事件
+    //响应订阅事件的父类事件，默认为true
     if (eventInheritance) {
         //找出当前订阅事件类类型的所有父类的类类型和其实现的接口的类类型
         List<Class<?>> eventTypes = lookupAllEventTypes(eventClass);
