@@ -142,7 +142,7 @@ api.get(1)
 | 角色                       | 作用                                                         | 备注                                                         |
 | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 网络请求执行器Call         | 创建HTTP网络请求                                             | Retrofit默认为OkHttp3.Call                                   |
-| 网络请求适配器CallAdapter  | 网络请求执行器Call的适配器，将默认的网络请求执行器OkHttpCall转换成适合被不同平台来调用的网络请求形式 |                                                              |
+| 网络请求适配器CallAdapter  | 网络请求执行器Call的适配器，将默认的网络请求执行器OkHttpCall转换成适合被不同平台来调用的网络请求形式 | Retrofit支持Android、RxJava、Java8和Guava四个平台：提供四种CallAdapterFactory：ExecutorCallAdapterFactory（Android默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJava2CallAdapterFactory；<br />网络适配器作用：一开始Retrofit只打算利用OkHttpCall通过ExecutorCallbackCall切换线程，但后来发现使用RxJava更加方便（不需要Handler切换线程）。想 |
 | 数据转换器Converter        | 将返回数据解析成需要的数据类型                               | 支持XMl、Gson、JSON、protobuf等等                            |
 | 回调执行器CallBackExecutor | 线程切换（子线程 -> 主线程）                                 | 将最后OkHttp的请求结果通过callbackExecutor使用Handler异步回调传回主线程 |
 
@@ -197,8 +197,7 @@ public final class Retrofit {
   //回调方法执行器
   final @Nullable Executor callbackExecutor;
     
-  //标志位
-  //作用：是否提前对业务接口中的注解进行验证转换的标志位
+  //标志位：是否提前对业务接口中的注解进行验证转换的标志位
   final boolean validateEagerly;
 
   //Retrofit构造函数
@@ -224,10 +223,10 @@ public final class Retrofit {
 5. converterFactories：数据转换器工厂的集合
 6. callbackExecutor：回调方法执行器
 
-#### CallAdapter：网络请求执行器Call的适配器
+##### CallAdapter：网络请求执行器Call的适配器
 
 1. Call在Retrofit里默认是OkHttpCall。
-2. 在Retrofit中提供四种CallAdapterFactory：ExecutorCallAdapterFactory（默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJavaCallAdapterFactory。
+2. 在Retrofit中提供四种CallAdapterFactory：ExecutorCallAdapterFactory（默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJava2CallAdapterFactory。
 
 作用：将默认的网络执行请求器（OkHttpCall）转换成适合被不同平台来调用的网络请求执行器的模式。
 
@@ -258,110 +257,63 @@ public static final class Builder {
 }
 
 class Platform {
-
   private static final Platform PLATFORM = findPlatform();
-  // 将findPlatform()赋给静态变量
 
   static Platform get() {
-    return PLATFORM;    
-    // 返回静态变量PLATFORM，即findPlatform() ->>步骤3
+    return PLATFORM;
   }
 
-<-- 步骤3 -->
-private static Platform findPlatform() {
+  private static Platform findPlatform() {
     try {
-
       Class.forName("android.os.Build");
-      // Class.forName(xxx.xx.xx)的作用：要求JVM查找并加载指定的类（即JVM会执行该类的静态代码段）
       if (Build.VERSION.SDK_INT != 0) {
-        return new Android(); 
-        // 此处表示：如果是Android平台，就创建并返回一个Android对象 ->>步骤4
+        return new Android();
       }
     } catch (ClassNotFoundException ignored) {
     }
-
+      
     try {
-      // 支持Java平台
       Class.forName("java.util.Optional");
       return new Java8();
     } catch (ClassNotFoundException ignored) {
     }
-
-    try {
-      // 支持iOS平台
-      Class.forName("org.robovm.apple.foundation.NSObject");
-      return new IOS();
-    } catch (ClassNotFoundException ignored) {
-    }
-
-// 从上面看出：Retrofit2.0支持3个平台：Android平台、Java平台、IOS平台
-// 最后返回一个Platform对象（指定了Android平台）给Builder的有参构造方法public Builder(Platform platform)  --> 步骤5
-// 说明Builder指定了运行平台为Android
+      
     return new Platform();
   }
-...
+  ...
 }
 
-<-- 步骤4 -->
-// 用于接收服务器返回数据后进行线程切换在主线程显示结果
-
+//用于接收服务器数据后切换回主线程
 static class Android extends Platform {
 
-    @Override
-      CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
-
-      return new ExecutorCallAdapterFactory(callbackExecutor);
-    // 创建默认的网络请求适配器工厂
-    // 该默认工厂生产的 adapter 会使得Call在异步调用时在指定的 Executor 上执行回调
-    // 在Retrofit中提供了四种CallAdapterFactory： ExecutorCallAdapterFactory（默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJavaCallAdapterFactory
-    // 采用了策略模式
-    
+    @Override public Executor defaultCallbackExecutor() {
+        //返回主线程执行器：从子线程切换至主线程，并在主线程中执行回调方法
+        return new MainThreadExecutor();
     }
 
-    @Override 
-      public Executor defaultCallbackExecutor() {
-      // 返回一个默认的回调方法执行器
-      // 该执行器作用：切换线程（子->>主线程），并在主线程（UI线程）中执行回调方法
-      return new MainThreadExecutor();
+    @Override List<? extends CallAdapter.Factory> defaultCallAdapterFactories(
+        @Nullable Executor callbackExecutor) {
+        if (callbackExecutor == null) throw new AssertionError();
+        DefaultCallAdapterFactory executorFactory = new DefaultCallAdapterFactory(callbackExecutor);
+        return Build.VERSION.SDK_INT >= 24
+            ? asList(CompletableFutureCallAdapterFactory.INSTANCE, executorFactory)
+            : singletonList(executorFactory);
+    }
+
+    @Override List<? extends Converter.Factory> defaultConverterFactories() {
+        return Build.VERSION.SDK_INT >= 24
+            ? singletonList(OptionalConverterFactory.INSTANCE)
+            : Collections.<Converter.Factory>emptyList();
     }
 
     static class MainThreadExecutor implements Executor {
-   
-      private final Handler handler = new Handler(Looper.getMainLooper());
-      // 获取与Android 主线程绑定的Handler 
+        private final Handler handler = new Handler(Looper.getMainLooper());
 
-      @Override 
-      public void execute(Runnable r) {
-        
-        
-        handler.post(r);
-        // 该Handler是上面获取的与Android 主线程绑定的Handler 
-        // 在UI线程进行对网络请求返回数据处理等操作。
-      }
+        @Override public void execute(Runnable r) {
+            handler.post(r);
+        }
     }
-
-// 切换线程的流程：
-// 1. 回调ExecutorCallAdapterFactory生成了一个ExecutorCallbackCall对象
-//2. 通过调用ExecutorCallbackCall.enqueue(CallBack)从而调用MainThreadExecutor的execute()通过handler切换到主线程
-  }
-
-// 下面继续看步骤5的Builder有参构造方法
-<-- 步骤5 -->
-//  Builder类的构造函数2（有参）
-  public  Builder(Platform platform) {
-
-  // 接收Platform对象（Android平台）
-      this.platform = platform;
-
-// 通过传入BuiltInConverters()对象配置数据转换器工厂（converterFactories）
-
-// converterFactories是一个存放数据转换器Converter.Factory的数组
-// 配置converterFactories即配置里面的数据转换器
-      converterFactories.add(new BuiltInConverters());
-
-// BuiltInConverters是一个内置的数据转换器工厂（继承Converter.Factory类）
-// new BuiltInConverters()是为了初始化数据转换器
-    }
+}
 ```
 
 Builder设置了默认的：
@@ -373,73 +325,53 @@ Builder设置了默认的：
 
 这里只是设置了默认值，未真正配置到具体的Retrofit类的成员变量中去。
 
-#### 步骤三
+#### 3.步骤三
 
 ```java
 public Builder baseUrl(String baseUrl) {
+    checkNotNull(baseUrl, "baseUrl == null");
+    return baseUrl(HttpUrl.get(baseUrl));
+}
 
-      // 把String类型的url参数转化为适合OKhttp的HttpUrl类型
-      HttpUrl httpUrl = HttpUrl.parse(baseUrl);     
-
-    // 最终返回带httpUrl类型参数的baseUrl（）
-    // 下面继续看baseUrl(httpUrl) ->> 步骤2
-      return baseUrl(httpUrl);
-    }
-
-
-<-- 步骤2 -->
-    public Builder baseUrl(HttpUrl baseUrl) {
-
-      //把URL参数分割成几个路径碎片
-      List<String> pathSegments = baseUrl.pathSegments();   
-
-      // 检测最后一个碎片来检查URL参数是不是以"/"结尾
-      // 不是就抛出异常    
-      if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
+public Builder baseUrl(HttpUrl baseUrl) {
+    checkNotNull(baseUrl, "baseUrl == null");
+    List<String> pathSegments = baseUrl.pathSegments();
+    if (!"".equals(pathSegments.get(pathSegments.size() - 1))) {
         throw new IllegalArgumentException("baseUrl must end in /: " + baseUrl);
-      }     
-      this.baseUrl = baseUrl;
-      return this;
     }
+    this.baseUrl = baseUrl;
+    return this;
+}
 ```
 
 将传入的String类型url转化为适合OkHttp的HttpUrl的url。
 
-#### 步骤四
+#### 4.步骤四
 
 ```java
 public final class GsonConverterFactory extends Converter.Factory {
 
-<-- 步骤1 -->
   public static GsonConverterFactory create() {
-    // 创建一个Gson对象
     return create(new Gson()); ->>步骤2
   }
 
-<-- 步骤2 -->
   public static GsonConverterFactory create(Gson gson) {
-    // 创建了一个含有Gson对象实例的GsonConverterFactory
-    return new GsonConverterFactory(gson); ->>步骤3
+    if (gson == null) throw new NullPointerException("gson == null");
+    return new GsonConverterFactory(gson);
   }
 
   private final Gson gson;
 
-<-- 步骤3 -->
   private GsonConverterFactory(Gson gson) {
-    if (gson == null) throw new NullPointerException("gson == null");
     this.gson = gson;
   }
 ```
 
-GsonConverterFactory.creat()是创建了一个含有Gson对象实例的GsonConverterFactory，并返回给`addConverterFactory（）`
-
 ```java
-// 将上面创建的GsonConverterFactory放入到 converterFactories数组
-// 在第二步放入一个内置的数据转换器工厂BuiltInConverters(）后又放入了一个GsonConverterFactory
-  public Builder addConverterFactory(Converter.Factory factory) {
-      converterFactories.add(checkNotNull(factory, "factory == null"));
-      return this;
-    }
+public Builder addConverterFactory(Converter.Factory factory) {
+    converterFactories.add(checkNotNull(factory, "factory == null"));
+    return this;
+}
 ```
 
 创建一个含有Gson对象实例的GsonConverterFactory并放入到数据转换器工厂converterFactories里。
@@ -447,50 +379,79 @@ GsonConverterFactory.creat()是创建了一个含有Gson对象实例的GsonConve
 1. 即Retrofit默认使用Gson进行解析
 2. 若使用其他解析方式（如Json、XML或Protocobuf），也可通过自定义数据解析器来实现（必须继承 Converter.Factory）
 
-#### 步骤五
+#### 5.步骤五
 
 ```java
 public Retrofit build() {
- 
- <--  配置网络请求执行器（callFactory）-->
-      okhttp3.Call.Factory callFactory = this.callFactory;
-      // 如果没指定，则默认使用okhttp
-      // 所以Retrofit默认使用okhttp进行网络请求
-      if (callFactory == null) {
-        callFactory = new OkHttpClient();
-      }
-
- <--  配置回调方法执行器（callbackExecutor）-->
-      Executor callbackExecutor = this.callbackExecutor;
-      // 如果没指定，则默认使用Platform检测环境时的默认callbackExecutor
-      // 即Android默认的callbackExecutor
-      if (callbackExecutor == null) {
-        callbackExecutor = platform.defaultCallbackExecutor();
-      }
-
- <--  配置网络请求适配器工厂（CallAdapterFactory）-->
-      List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
-      // 向该集合中添加了步骤2中创建的CallAdapter.Factory请求适配器（添加在集合器末尾）
-      adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
-    // 请求适配器工厂集合存储顺序：自定义1适配器工厂、自定义2适配器工厂...默认适配器工厂（ExecutorCallAdapterFactory）
-
- <--  配置数据转换器工厂：converterFactory -->
-      // 在步骤2中已经添加了内置的数据转换器BuiltInConverters(）（添加到集合器的首位）
-      // 在步骤4中又插入了一个Gson的转换器 - GsonConverterFactory（添加到集合器的首二位）
-      List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
-      // 数据转换器工厂集合存储的是：默认数据转换器工厂（ BuiltInConverters）、自定义1数据转换器工厂（GsonConverterFactory）、自定义2数据转换器工厂....
-
-// 注：
-//1. 获取合适的网络请求适配器和数据转换器都是从adapterFactories和converterFactories集合的首位-末位开始遍历
-// 因此集合中的工厂位置越靠前就拥有越高的使用权限
-
-      // 最终返回一个Retrofit的对象，并传入上述已经配置好的成员变量
-      return new Retrofit(callFactory, baseUrl, converterFactories, adapterFactories,
-          callbackExecutor, validateEagerly);
+    if (baseUrl == null) {
+        throw new IllegalStateException("Base URL required.");
     }
+
+    okhttp3.Call.Factory callFactory = this.callFactory;
+    if (callFactory == null) {
+        callFactory = new OkHttpClient();
+    }
+
+    Executor callbackExecutor = this.callbackExecutor;
+    if (callbackExecutor == null) {
+        callbackExecutor = platform.defaultCallbackExecutor();
+    }
+
+    List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>(this.callAdapterFactories);
+    callAdapterFactories.addAll(platform.defaultCallAdapterFactories(callbackExecutor));
+
+    List<Converter.Factory> converterFactories = new ArrayList<>(
+        1 + this.converterFactories.size() + platform.defaultConverterFactoriesSize());
+
+    converterFactories.add(new BuiltInConverters());
+    converterFactories.addAll(this.converterFactories);
+    converterFactories.addAll(platform.defaultConverterFactories());
+
+    return new Retrofit(callFactory, baseUrl, unmodifiableList(converterFactories),
+                        unmodifiableList(callAdapterFactories), callbackExecutor, validateEagerly);
+}
 ```
 
 将Retrofit类的所有成员变量都配置完毕，成功创建了Retrofit的实例。
+
+#### 6.创建Service
+
+```java
+public <T> T create(final Class<T> service) {
+  Utils.validateServiceInterface(service);
+  if (validateEagerly) {
+    eagerlyValidateMethods(service);
+  }
+  return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
+      new InvocationHandler() {
+        private final Platform platform = Platform.get();
+        private final Object[] emptyArgs = new Object[0];
+
+        @Override public @Nullable Object invoke(Object proxy, Method method,
+            @Nullable Object[] args) throws Throwable {
+          // If the method is a method from Object then defer to normal invocation.
+          if (method.getDeclaringClass() == Object.class) {
+            return method.invoke(this, args);
+          }
+          if (platform.isDefaultMethod(method)) {
+            return platform.invokeDefaultMethod(method, service, proxy, args);
+          }
+          return loadServiceMethod(method).invoke(args != null ? args : emptyArgs);
+        }
+      });
+}
+```
+
+```java
+private void eagerlyValidateMethods(Class<?> service) {
+  Platform platform = Platform.get();
+  for (Method method : service.getDeclaredMethods()) {
+      if (!platform.isDefaultMethod(method) && !Modifier.isStatic(method.getModifiers())) {
+          loadServiceMethod(method);
+      }
+  }
+}
+```
 
 
 
