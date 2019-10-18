@@ -144,3 +144,8 @@ public native int hashCode();
 2. 如果两个对象不equals，他们的hashcode有可能相等。 
 3. 如果两个对象hashcode相等，他们不一定equals。 
 4. 如果两个对象hashcode不相等，他们一定不equals。 
+
+### 13.sleep和wait的区别
+
+- sleep()：Thread类的静态方法，导致程序暂停执行指定时间，让出CPU给其他线程，但是他的监控状态依然保持，当指定时间到达之后，又自动恢复运行状态，在调用sleep方法时，线程不会释放锁（只会让出CPU，不会释放锁）。
+- wait()：Object的方法，在调用wait方法时，线程会放弃对象锁，进入等待此对象的等待池，只有针对此对象调用notify方法后此线程才离开等待池，并且再次获得CPU时间片才会继续执行（不仅让出CPU，还释放锁）。
