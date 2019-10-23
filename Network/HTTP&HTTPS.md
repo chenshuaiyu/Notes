@@ -65,7 +65,7 @@ HTTPS 默认工作在 TCP 协议443端口，它的工作流程一般如以下方
 
 工作原理：
 
-![HTTPS工作原理](E:\Github仓库\Notes\Network\assets\HTTPS工作原理.png)
+![HTTPS工作原理](https://github.com/chenshuaiyu/Notes/blob/master/Network/assets/HTTPS%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86.png)
 
 **1、客户端发起 HTTPS 请求**
 

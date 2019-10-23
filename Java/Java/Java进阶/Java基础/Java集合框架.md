@@ -321,7 +321,7 @@ void linkLast(E e) {
 # HashTable
 
 - 底层数组+链表实现，key/value都不能为null，线程安全，实现线程安全的方式是在修改数据时锁住整个HashTable，效率低，ConcurrentHashMap做了相关优化
-- 初始size为**11**，扩容：newsize = oldsize*2+1
+- 初始size为**11**，负载因子默认为0.75，扩容：newsize = oldsize*2+1
 - 计算index的方法：index = (hash & 0x7FFFFFFF) % tab.length
 
 # HashMap
@@ -610,7 +610,7 @@ public LinkedHashMap(int initialCapacity,
 
 来按照访问顺序排序，
 
-### 二、三个重点实现的函数
+### 二、3个重点实现的函数
 
 ```java
 void afterNodeAccess(Node<K,V> e) { }
@@ -618,7 +618,7 @@ void afterNodeInsertion(boolean evict) { }
 void afterNodeRemoval(Node<K,V> e) { }
 ```
 
-LinkedHashMap继承与HashMap，因此也重新实现了这3个函数，在accessOrder为true时调用这些函数，函数作用是节点访问后，节点插入后，节点移除后做一些事情。
+LinkedHashMap继承于HashMap，因此也重新实现了这3个函数，在accessOrder为true时调用这些函数，函数作用是节点访问后，节点插入后，节点移除后做一些事情。
 
 ```java
 void afterNodeAccess(Node<K,V> e) { // move node to last

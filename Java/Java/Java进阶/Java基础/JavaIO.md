@@ -130,7 +130,7 @@ Java使用处理流来包装节点流属于**装饰器模式**，使用处理流
 
 ### 四、IO流四大基类
 
-![IO流四大基类](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java进阶/assets/IO流四大基类.png)
+![IO流四大基类](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/IO流四大基类.png)
 
 #### 1.InputStream
 

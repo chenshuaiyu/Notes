@@ -137,6 +137,7 @@ public interface Subscriber<T> {
     public void onNext(T t);
     public void onError(Throwable t);
     public void onComplete();
+}
 ```
 
 #### 3.通过订阅连接观察者和被观察者
