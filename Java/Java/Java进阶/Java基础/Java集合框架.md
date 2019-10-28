@@ -335,7 +335,27 @@ void linkLast(E e) {
 - 当Map中元素总数超过Entry数组的75%，触发扩容操作，为了减少链表长度，元素分配更均匀
 - 计算index方法：index = hash & (tab.length – 1)
 
-二、两个重要参数
+**关于index取值：**
+
+1. 一般使用index = hash % n，但是&的效率高于%，所以使用index = hash & (n – 1)，故将容量设计为2的幂。
+2. 结论：在 n = 2的幂 时，hash % n = X & (n- 1)。
+
+**NULL Key存放在哪里？**
+
+```java
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+```
+
+Null Key的 hash(key)=0，故 index = 0。
+
+### 二、两个重要参数
 
 容量（Capacity），负载因子（Load factor）
 

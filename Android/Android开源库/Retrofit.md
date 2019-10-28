@@ -142,7 +142,7 @@ api.get(1)
 | 角色                       | 作用                                                         | 备注                                                         |
 | -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 网络请求执行器Call         | 创建HTTP网络请求                                             | Retrofit默认为OkHttp3.Call                                   |
-| 网络请求适配器CallAdapter  | 网络请求执行器Call的适配器，将默认的网络请求执行器OkHttpCall转换成适合被不同平台来调用的网络请求形式 | Retrofit支持Android、RxJava、Java8和Guava四个平台：提供四种CallAdapterFactory：ExecutorCallAdapterFactory（Android默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJava2CallAdapterFactory；<br />网络适配器作用：一开始Retrofit只打算利用OkHttpCall通过ExecutorCallbackCall切换线程，但后来发现使用RxJava更加方便（不需要Handler切换线程）。想 |
+| 网络请求适配器CallAdapter  | 网络请求执行器Call的适配器，将默认的网络请求执行器OkHttpCall转换成适合被不同平台来调用的网络请求形式 | Retrofit支持Android、RxJava、Java8和Guava四个平台：提供四种CallAdapterFactory：ExecutorCallAdapterFactory（Android默认）、GuavaCallAdapterFactory、Java8CallAdapterFactory、RxJava2CallAdapterFactory；<br />网络适配器作用：一开始Retrofit只打算利用OkHttpCall通过ExecutorCallbackCall切换线程，但后来发现使用RxJava更加方便（不需要Handler切换线程）。 |
 | 数据转换器Converter        | 将返回数据解析成需要的数据类型                               | 支持XMl、Gson、JSON、protobuf等等                            |
 | 回调执行器CallBackExecutor | 线程切换（子线程 -> 主线程）                                 | 将最后OkHttp的请求结果通过callbackExecutor使用Handler异步回调传回主线程 |
 
@@ -352,7 +352,7 @@ public Builder baseUrl(HttpUrl baseUrl) {
 public final class GsonConverterFactory extends Converter.Factory {
 
   public static GsonConverterFactory create() {
-    return create(new Gson()); ->>步骤2
+    return create(new Gson());
   }
 
   public static GsonConverterFactory create(Gson gson) {
@@ -386,7 +386,7 @@ public Retrofit build() {
     if (baseUrl == null) {
         throw new IllegalStateException("Base URL required.");
     }
-
+	
     okhttp3.Call.Factory callFactory = this.callFactory;
     if (callFactory == null) {
         callFactory = new OkHttpClient();
