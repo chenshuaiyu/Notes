@@ -1,8 +1,8 @@
-# MVC、MVP 、MVVM模式
+# MVC、MVP 、MVVM架构
 
 ### 1.MVC
 
-- View：对应于xml布局和Activity/Fragment。
+- View：对应于 XML 布局。
 - Model：数据层，负责存储、检索、操作数据。
 - Cotroller：对应于Activity/Fragment中的业务逻辑。
 
