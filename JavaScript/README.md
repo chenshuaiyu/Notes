@@ -1,4 +1,4 @@
 # JavaScript
 
 - 安装WebStorm
-- 注释、输出、变量
+- 菜鸟教程（ing）
