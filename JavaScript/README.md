@@ -1,4 +1,4 @@
 # JavaScript
 
 - 安装WebStorm
-- 菜鸟教程（ing）
+- 菜鸟教程
