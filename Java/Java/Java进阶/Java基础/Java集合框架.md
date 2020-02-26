@@ -367,9 +367,8 @@ Capacity是bucket的大小，Load factor是bucket填满程度的最大比例。�
 
 1. 对key的hashCode()做hash()，然后再计算index
 2. 如果没碰撞直接放到bucket里
-3. 如果碰撞了，以链表的形式存在buckets后
+3. 如果碰撞了，在链表中搜索是否存在此节点，不存在的话以链表的形式存在buckets后，若存在替换old value
 4. 如果碰撞导致链表过长（大于等于TREEIFY_THRESHOLD=8），就把链表转换成红黑树
-5. 如果节点已经存在就替换old value（保证key的唯一性）
 6. 如果bucket满了（超过`load factor × current capacity`），就要resize。
 
 ```java
@@ -485,9 +484,9 @@ static final int hash(Object key) {
 
 ### 六、RESIZE的实现
 
-当put时，如果超过比例，就会发生resize。在resize的过程中，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点放到新的bucket中。
-
-扩充HashMap时，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0，是0的话索引不变，是1的话索引直接变成原索引+oldCap。
+- 当put时，如果超过比例，就会发生resize。在resize的过程中，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点放到新的bucket中。
+- 扩充HashMap时，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0，是0的话索引不变，是1的话索引直接变成原索引+oldCap
+- 如果之前在某个bucket上是树节点，通过重新计算index后，将其分为两个类型为树节点的链表结构，如果链表结构≤6个节点，将节点类型转化为普通节点，否则，将链表结构转换为树结构。
 
 ```java
 final Node<K,V>[] resize() {

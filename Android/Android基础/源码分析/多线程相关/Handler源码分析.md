@@ -152,8 +152,9 @@ Message next() {
             Message prevMsg = null;
             Message msg = mMessages;
 
+            //同步屏障就是一个target为null的msg，相当于拦截同步消息的“保安”，一旦开启同步屏障，只有异步消息可以通过，相当于为异步消息提高优先级 
             if (msg != null && msg.target == null) {
-                //如果从队列里拿到的msg是个“同步分割栏”，那么就寻找其后第一个“异步消息”
+                //如果从队列里拿到的msg是个“同步屏障”，那么就寻找其后第一个“异步消息”
                 do {
                     prevMsg = msg;
                     msg = msg.next;
@@ -440,11 +441,231 @@ private static void handleCallback(Message message) {
 }
 ```
 
-### 6.常见面试题
+### 6.同步屏障机制
+
+#### 1.发送异步消息
+
+```java
+//1.新建一个专门发送异步消息的Handler
+public Handler(boolean async) {
+    this(null, async);
+}
+
+Handler mHandler = new Handler(true);
+Message msg = mHandler.obtainMessage(...);
+mHandler.sendMessageAtTime(msg, dueTime);
+
+//2.设置Message的异步属性为true
+Message msg = mHandler.obtainMessage(...);
+msg.setAsynchronous(true);
+```
+#### 2.开启同步屏障
+
+如果想让异步消息起作用，就得开启同步障碍，同步障碍会阻碍同步消息，只允许通过异步消息，如果队列中没有异步消息，此时的loop()方法将被Linux epoll机制所阻塞。
+
+```java
+mHandler.getLooper().getQueue().postSyncBarrier();
+
+public int postSyncBarrier() {
+	return postSyncBarrier(SystemClock.uptimeMillis());
+}
+
+private int postSyncBarrier(long when) {
+    //返回值token
+	final int token = mNextBarrierToken++;
+    final Message msg = Message.obtain();
+    msg.markInUse();
+    msg.when = when;
+    msg.arg1 = token;
+    Message prev = null;
+    Message p = mMessages;
+    if (when != 0) {
+        while (p != null && p.when <= when) {
+            prev = p;
+            p = p.next;
+        }
+    }
+    if (prev != null) {
+        msg.next = p;
+        prev.next = msg;
+    } else {
+        msg.next = p;
+        mMessages = msg;
+    }
+    return token;
+}
+```
+
+在实例化Message对象的时候并没有设置它的target成员变量的值，然后随即就根据执行时间把它放到链表的某个位置了。也就是说，当在消息队列中放入一个target为空的Message的时候，当前Handler的这一套消息机制就开启了同步阻断。
+
+```java
+//分析3：MessageQueue.next()
+Message next() {
+    int pendingIdleHandlerCount = -1; // -1 only during first iteration
+    
+    //用于确定消息队列中是否还有消息，决定消息队列应处于出队消息状态或等待状态
+    int nextPollTimeoutMillis = 0;
+
+    for (;;) {
+        if (nextPollTimeoutMillis != 0) {
+            Binder.flushPendingCommands();
+        }
+
+        // nativePollOnce方法在native层，若是nextPollTimeoutMillis为-1，此时消息队列处于等待状态，线程阻塞
+        nativePollOnce(ptr, nextPollTimeoutMillis);
+
+        synchronized (this) {
+            final long now = SystemClock.uptimeMillis();
+            Message prevMsg = null;
+            Message msg = mMessages;
+
+            //同步屏障就是一个target为null的msg，相当于拦截同步消息的“保安”，一旦开启同步屏障，只有异步消息可以通过，相当于为异步消息提高优先级 
+            if (msg != null && msg.target == null) {
+                //如果从队列里拿到的msg是个“同步屏障”，那么就寻找其后第一个“异步消息”
+                do {
+                    prevMsg = msg;
+                    msg = msg.next;
+                } while (msg != null && !msg.isAsynchronous());
+            }
+            if (msg != null) {
+                if (now < msg.when) {
+                    //如果有消息，但是时间还没到，或者没有消息的时候
+                    nextPollTimeoutMillis = (int) Math.min(msg.when - now, Integer.MAX_VALUE);
+                } else {
+                    //取出消息
+                    mBlocked = false;
+                    if (prevMsg != null) {
+                        prevMsg.next = msg.next;
+                    } else {
+                        mMessages = msg.next;
+                    }
+                    msg.next = null;
+                    if (DEBUG) Log.v(TAG, "Returning message: " + msg);
+                    //标记为已使用
+                    msg.markInUse();
+                    return msg;
+                }
+            } else {
+                //消息队列为等待状态
+                nextPollTimeoutMillis = -1;
+            }
+            
+            if (mQuitting) {
+                dispose();
+                return null;
+            }
+
+            if (pendingIdleHandlerCount < 0
+                && (mMessages == null || now < mMessages.when)) {
+                pendingIdleHandlerCount = mIdleHandlers.size();
+            }
+            if (pendingIdleHandlerCount <= 0) {
+                // No idle handlers to run.  Loop and wait some more.
+                mBlocked = true;
+                continue;
+            }
+
+            if (mPendingIdleHandlers == null) {
+                mPendingIdleHandlers = new IdleHandler[Math.max(pendingIdleHandlerCount, 4)];
+            }
+            mPendingIdleHandlers = mIdleHandlers.toArray(mPendingIdleHandlers);
+        }
+        
+        //IdleHandler的作用就是在队列空闲的时候干点事情，要使用IdleHandler就调用MessageQueue.addIdleHandler(IdleHandler handler)方法
+        for (int i = 0; i < pendingIdleHandlerCount; i++) {
+            final IdleHandler idler = mPendingIdleHandlers[i];
+            mPendingIdleHandlers[i] = null;
+
+            boolean keep = false;
+            try {
+                keep = idler.queueIdle();
+            } catch (Throwable t) {
+                Log.wtf(TAG, "IdleHandler threw exception", t);
+            }
+
+            if (!keep) {
+                synchronized (this) {
+                    mIdleHandlers.remove(idler);
+                }
+            }
+        }
+
+        pendingIdleHandlerCount = 0;
+        nextPollTimeoutMillis = 0;
+    }
+}
+```
+
+开启了同步障碍时，Looper在获取下一个要执行的消息时，会在链表中寻找第一个要执行的异步消息，如果没有找到异步消息，就让当前线程沉睡。
+
+消息机制中也很巧妙的融入了优先级特点，这个同步障碍机制，实质上是一个对消息队列的优先级显示。
+
+#### 3.移除同步屏障
+
+```java
+public void removeSyncBarrier(int token) {
+    // Remove a sync barrier token from the queue.
+    // If the queue is no longer stalled by a barrier then wake it.
+    synchronized (this) {
+        Message prev = null;
+        Message p = mMessages;
+        //找到token对应的屏障
+        while (p != null && (p.target != null || p.arg1 != token)) {
+            prev = p;
+            p = p.next;
+        }
+        if (p == null) {
+            throw new IllegalStateException("The specified message queue synchronization "
+                                            + " barrier token has not been posted or has already been removed.");
+        }
+        final boolean needWake;
+        //从消息链表中移除
+        if (prev != null) {
+            prev.next = p.next;
+            needWake = false;
+        } else {
+            mMessages = p.next;
+            needWake = mMessages == null || mMessages.target != null;
+        }
+        //回收这个Message到对象池中。
+        p.recycleUnchecked();
+
+        // If the loop is quitting then it is already awake.
+        // We can assume mPtr != 0 when mQuitting is false.
+        if (needWake && !mQuitting) {
+            nativeWake(mPtr);//唤醒消息队列
+        }
+    }
+}
+```
+
+### 7.IdleHandler
+
+```java
+public static interface IdleHandler {
+    boolean queueIdle();
+}
+
+//使用方法
+MessageQueue.addIdleHandler();
+```
+
+MessageQueue中：
+
+- 存放IdleHandler的ArrayList(mIdleHandlers)，
+- 还有一个IdleHandler数组(mPendingIdleHandlers)。
+
+数组里面放的IdleHandler实例都是临时的，也就是每次使用完（调用了queueIdle方法）之后，都会置空（mPendingIdleHandlers[i] = null），
+
+1. 如果本次循环拿到的Message为空，或者这个Message是一个延时的消息而且还没到指定的触发时间，那么，就认定当前的队列为空闲状态，
+2. 接着就会遍历mPendingIdleHandlers数组(这个数组里面的元素每次都会到mIdleHandlers中去拿)来调用每一个IdleHandler实例的queueIdle方法，
+3. 如果这个方法返回false的话，那么这个实例就会从mIdleHandlers中移除，也就是当下次队列空闲的时候，不会继续回调它的queueIdle方法了。
+
+### 8.常见面试题
 
 #### 1.loop为什么不会阻塞，CPU为什么不会忙等？
 
-通过epoll机制监听文件I/O事件，在有message需要处理时，写入数据以唤醒线程，没有message处理时，让线程进入休眠状态。
+nativeWake()方法和nativePollOnce()方法采用了Linux的epoll机制，其中nativePollOnce()的第二个值，当它是-1时会一直沉睡，直到被主动唤醒为止，当它是0时不会沉睡，当它是大于0的值时会沉睡传入的值那么多的毫秒时间。epoll机制实质上是让CPU沉睡，来保障当前线程一直在运行而不中断或者卡死，这也是Looper#loop()死循环为什么不会导致ANR的根本原因。
 
 [Gityuan的回答](https://www.zhihu.com/question/34652589)
 

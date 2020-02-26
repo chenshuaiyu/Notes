@@ -1,5 +1,7 @@
 # Java编程思想 - Thinking In Java
 
+------
+
 ### 学习进度
 
 - [x] 第1章 对象入门

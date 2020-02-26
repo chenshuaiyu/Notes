@@ -8,6 +8,7 @@
 4. ANR分析。
 5. ANR的处理。
 6. 如何避免ANR。
+7. 源码分析
 
 ------
 
@@ -69,4 +70,27 @@ Process.setThreadPriority(THREAD_PRIORITY_BACKGROUND);
 ```
 
 因为如果没有做任何优先级设置的话，创建的Thread默认和UI Thread是具有同样的优先级的，同样的优先级的Thread，CPU调度上还是可能会阻塞掉你的UI Thread，导致ANR的。
+
+### 7.源码分析
+
+```java
+//ActivityManagerService
+static final int SHOW_NOT_RESPONDING_UI_MSG = 2;
+
+//弹出ANR对话框的条件就是AMS中的UiHandler收到了what为SHOW_NOT_RESPONDING_UI_MSG的消息
+case SHOW_NOT_RESPONDING_UI_MSG: {
+    //创建一个AppNotRespondingDialog(系统的自定义Dialog)，最终会以TYPE_SYSTEM_ERROR的方式弹出
+    mAppErrors.handleShowAnrUi(msg);
+}
+
+//发送请求弹出ANR对话框
+mService.mUiHandler.sendMessage(msg);
+//调用此代码的四个地方：
+//	1.ActiveServices的serviceTimeout方法：后台服务超时
+//	2.ActiveServices的serviceForegroundTimeout方法：前台服务超时
+//	3.ActivityManagerService的appNotRespondingViaProvider方法：ContentProvider造成
+//	4.ActivityManagerService的inputDispatchingTimedOut方法：input事件分派的时候超时(处理事件时被阻塞)所发出的，input事件，有两种，一种是KeyEvent(按键)，另一种是MotionEvent(触摸)。
+
+//在input事件分派超时的时候，有两种情况不会弹框，1.处于debug时，2.来自子进程，这种情况下回直接kill子进程
+```
 

@@ -112,7 +112,6 @@ public class ThreadLocal<T> {
     static class ThreadLocalMap {
 
         static class Entry extends WeakReference<ThreadLocal<?>> {
-            /** The value associated with this ThreadLocal. */
             Object value;
 
             Entry(ThreadLocal<?> k, Object v) {
@@ -120,7 +119,11 @@ public class ThreadLocal<T> {
                 value = v;
             }
         }
-        ...
+        
+        private static final int INITIAL_CAPACITY = 16;
+        private Entry[] table;
+        private int size = 0;
+        private int threshold;
     }
 }
 ```
@@ -137,4 +140,3 @@ public class Thread implements Runnable {
 1. 每个Thread都有自己独立的ThreadLocalMap实例。
 2. 访问ThreadLocal变量时，访问的都是各自线程的ThreadLocalMap。
 3. ThreadLocalMap = 当前ThreadLocal实例
-
