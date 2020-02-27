@@ -16,11 +16,11 @@
 
 Collection和Map是Java集合框架的根接口。
 
-![集合框架继承](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/Collection继承体系.png)
+![集合框架继承](../assets/Collection继承体系.png)
 
 ArrayList，LinkedList，HashSet，TreeSet是经常会用到的集合类。
 
-![Map继承体系](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/Map继承体系.png)
+![Map继承体系](../assets/Map继承体系.png)
 
 Map实现类用于保存具有映射关系的数据。HashMap，TreeMap是经常会用到的集合类。
 
@@ -329,7 +329,7 @@ void linkLast(E e) {
 ### 一、概述
 
 - 基于Map接口，允许null键/值，非同步，无序。
-- 初始size为16，扩容：newsize = oldsize*2，size一定为2的n次幂
+- 初始size为16，扩容：newsize = oldsize * 2，size一定为2的n次幂
 - 扩容针对整个Map，每次扩容时，原来数组中的元素依次重新计算存放位置，并重新插入
 - 插入元素后才判断该不该扩容，有可能无效扩容（插入后如果扩容，如果没有再次插入，就会产生无效扩容）
 - 当Map中元素总数超过Entry数组的75%，触发扩容操作，为了减少链表长度，元素分配更均匀
@@ -338,7 +338,7 @@ void linkLast(E e) {
 **关于index取值：**
 
 1. 一般使用index = hash % n，但是&的效率高于%，所以使用index = hash & (n – 1)，故将容量设计为2的幂。
-2. 结论：在 n = 2的幂 时，hash % n = X & (n- 1)。
+2. 结论：在 n = 2的幂 时，hash % n = X & (n - 1)。
 
 **NULL Key存放在哪里？**
 
@@ -451,7 +451,7 @@ final Node<K,V> getNode(int hash, Object key) {
             //在树中get
             if (first instanceof TreeNode)
                 return ((TreeNode<K,V>)first).getTreeNode(hash, key);
-            //在表中get
+            //在链表中get
             do {
                 if (e.hash == hash &&
                     ((k = e.key) == key || (key != null && key.equals(k))))
@@ -467,7 +467,7 @@ final Node<K,V> getNode(int hash, Object key) {
 
 在get和put的过程中，计算下标时，先对hashCode进行hash操作，然后再通过hash值进一步计算下标，如下图所示：
 
-![hash函数的实现](https://github.com/chenshuaiyu/Notes/blob/master/Java/Java/Java进阶/assets/hash函数的实现.png)
+![hash函数的实现](../assets/hash函数的实现.png)
 
 ```java
 static final int hash(Object key) {
@@ -484,7 +484,7 @@ static final int hash(Object key) {
 
 ### 六、RESIZE的实现
 
-- 当put时，如果超过比例，就会发生resize。在resize的过程中，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点放到新的bucket中。
+- 当put后，如果超过比例，就会发生resize。在resize的过程中，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点放到新的bucket中。
 - 扩充HashMap时，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0，是0的话索引不变，是1的话索引直接变成原索引+oldCap
 - 如果之前在某个bucket上是树节点，通过重新计算index后，将其分为两个类型为树节点的链表结构，如果链表结构≤6个节点，将节点类型转化为普通节点，否则，将链表结构转换为树结构。
 
@@ -599,11 +599,7 @@ final Node<K,V>[] resize() {
 
 # ConcurrentHashMap
 
-
-
-
-
-
+[ConcurrentHashMap](../Java并发/ConcurrentHashMap源码分析.md)
 
 # LinkedHashMap
 
