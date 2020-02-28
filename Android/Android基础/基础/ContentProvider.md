@@ -16,7 +16,7 @@ ContentProvider = 中间者角色（搬运工），真正存储和操作的数�
 
 ### 四、使用方法
 
-#### 4.1 统一资源定位符（URI）
+#### 4.1 统一资源标识符（URI）
 
 Uniform Resourse Identifier，即统一资源标识符。
 

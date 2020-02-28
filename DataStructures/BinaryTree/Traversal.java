@@ -1,5 +1,6 @@
-package BinaryTree;
+package test;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
@@ -28,6 +29,35 @@ public class Traversal {
             System.out.print(tree.val + " ");
             if (tree.left != null) queue.add(tree.left);
             if (tree.right != null) queue.add(tree.right);
+        }
+    }
+
+    //之字形遍历
+    public void zhiOrderTraversal(BinaryTree root) {
+        boolean order = true;
+        ArrayList<ArrayList<Integer>> ans = new ArrayList<>();
+        Queue<BinaryTree> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            LinkedList<Integer> linkedList = new LinkedList<>();
+            for (int i = queue.size() - 1; i >= 0; i--) {
+                BinaryTree poll = queue.poll();
+                if (order) {
+                    linkedList.addLast(poll.val);
+                } else {
+                    linkedList.addFirst(poll.val);
+                }
+                if (poll.left != null) queue.add(poll.left);
+                if (poll.right != null) queue.add(poll.right);
+            }
+            order = !order;
+            ans.add(new ArrayList<>(linkedList));
+        }
+        for (ArrayList<Integer> a : ans) {
+            for (Integer i : a) {
+                System.out.print(i + " ");
+            }
+            System.out.println();
         }
     }
 

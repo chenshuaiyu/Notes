@@ -32,7 +32,7 @@ Service默认并不会运行在子线程中，也不会运行在一个独立的�
 
 ### 三、Service生命周期
 
-![Service生命周期](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/Service生命周期.png)
+![Service生命周期](../assets/Service生命周期.png)
 
 **onCreate()：**
 
