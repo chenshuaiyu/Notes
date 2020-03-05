@@ -201,9 +201,10 @@ private static class SerialExecutor implements Executor {
 //分析4：THREAD_POOL_EXECUTOR.execute()
 public static final Executor THREAD_POOL_EXECUTOR;
 
-private static final int CORE_POOL_SIZE = Math.max(2, Math.min(CPU_COUNT - 1, 4));
-private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 2 + 1;
-private static final int KEEP_ALIVE_SECONDS = 30;
+private static final int CORE_POOL_SIZE = 1;
+private static final int MAXIMUM_POOL_SIZE = 20;
+private static final int BACKUP_POOL_SIZE = 5;
+private static final int KEEP_ALIVE_SECONDS = 3;
 
 private static final ThreadFactory sThreadFactory = new ThreadFactory() {
     private final AtomicInteger mCount = new AtomicInteger(1);
@@ -219,10 +220,28 @@ private static final BlockingQueue<Runnable> sPoolWorkQueue =
 static {
     ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
         CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,
-        sPoolWorkQueue, sThreadFactory);
-    threadPoolExecutor.allowCoreThreadTimeOut(true);
+        new SynchronousQueue<Runnable>(), sThreadFactory);
+    threadPoolExecutor.setRejectedExecutionHandler(sRunOnSerialPolicy);// ---> 分析5：sRunOnSerialPolicy
     THREAD_POOL_EXECUTOR = threadPoolExecutor;
 }
+
+//分析4：sRunOnSerialPolicy
+private static final RejectedExecutionHandler sRunOnSerialPolicy =
+    	new RejectedExecutionHandler() {
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+        synchronized (this) {
+            if (sBackupExecutor == null) {
+                sBackupExecutorQueue = new LinkedBlockingQueue<Runnable>();
+                //备用线程池，用于并行执行任务时的RejectedExecutionHandler
+                sBackupExecutor = new ThreadPoolExecutor(
+                    BACKUP_POOL_SIZE, BACKUP_POOL_SIZE, KEEP_ALIVE_SECONDS,
+                    TimeUnit.SECONDS, sBackupExecutorQueue, sThreadFactory);
+                sBackupExecutor.allowCoreThreadTimeOut(true);
+            }
+        }
+        sBackupExecutor.execute(r);
+    }
+};
 ```
 
 返回构造函数中，
