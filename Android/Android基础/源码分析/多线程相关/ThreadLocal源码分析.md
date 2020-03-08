@@ -120,12 +120,33 @@ public class ThreadLocal<T> {
             }
         }
         
-        private static final int INITIAL_CAPACITY = 16;
-        private Entry[] table;
-        private int size = 0;
-        private int threshold;
+        private static final int INITIAL_CAPACITY = 16;//初始容量为16，必须为2^n
+        private int size = 0;//table中Entry的数量
+        private int threshold;//扩容阈值, 当size >= threshold时就会触发扩容逻辑
+        private Entry[] table;//table数组
+        
+        private void setThreshold(int len) {
+            //长度的2/3
+            threshold = len * 2 / 3;
+        }
+        
+        //threadLocalHashCode用于计算index
+        private final int threadLocalHashCode = nextHashCode();//threadLocalHashCode的值等于nextHashCode方法的返回值
+        private static AtomicInteger nextHashCode = new AtomicInteger();
+        private static final int HASH_INCREMENT = 0x61c88647;
+        private static int nextHashCode() {
+            //每次调用nextHashCode方法都会在原本的int值加上0x61c88647后再返回
+            return nextHashCode.getAndAdd(HASH_INCREMENT);
+        }
     }
 }
+```
+
+计算index：
+
+```java
+int i = key.threadLocalHashCode & (len-1);
+//当出现冲突时，ThreadLocalMap是使用线性探测法来解决冲突的，即如果i位置已经有了key-value映射，就会在i + 1位置找(到达len返回0)，直到找到一个合适的位置。
 ```
 
 ```java
@@ -140,3 +161,7 @@ public class Thread implements Runnable {
 1. 每个Thread都有自己独立的ThreadLocalMap实例。
 2. 访问ThreadLocal变量时，访问的都是各自线程的ThreadLocalMap。
 3. ThreadLocalMap = 当前ThreadLocal实例
+
+### 5.脏槽
+
+Entry 继承至 **WeakReference**，并且它的**key是弱引用**，但是**value是强引用**，所以如果**key关联的ThreadLocal实例**没有强引用，只有弱引用时，在gc发生时，ThreadLocal实例就会被gc回收，当ThreadLocal实例被gc回收后，由于value是强引用，导致table数组中存在着**null - value**这样的映射，称之为**脏槽**，这种脏槽会浪费table数组的空间，所以需要及时清除，所以ThreadLocalMap 中提供了**expungeStaleEntry**方法和**expungeStaleEntries**方法去清理这些脏槽，每次ThreadLocalMap 运行getEntry、set、remove等方法时，都会主动的间接使用这些方法去清理脏槽，从而释放更多的空间，避免无谓的扩容操作。

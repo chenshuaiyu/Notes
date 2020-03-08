@@ -28,7 +28,7 @@
 1. copy_from_user()：将用户空间的数据拷贝到内核空间。
 2. copy_to_user()：将内核空间的数据拷贝到用户空间。
 
-![用户和内核空间](https://github.com/chenshuaiyu/Notes/blob/master/Android/Android进阶/assets/用户和内核空间.png)
+![用户和内核空间](..//assets//用户和内核空间.png)
 
 #### 2.2 进程隔离和跨进程通信（IPC）
 
