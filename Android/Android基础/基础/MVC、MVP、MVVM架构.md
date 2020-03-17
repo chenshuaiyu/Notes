@@ -2,7 +2,7 @@
 
 ### 一、MVC
 
-![MVC](..\assets\MVC.png)
+![MVC](..//assets//MVC.png)
 
 MVC，全名是Model-View-Controller，是模型(model)－视图(view)－控制器(controller)的缩写，一种软件设计典范，用一种业务逻辑、数据、界面显示分离的方法组织代码，在改进和个性化定制界面及用户交互的同时，不需要重新编写业务逻辑。 
 
@@ -32,7 +32,7 @@ MVC，全名是Model-View-Controller，是模型(model)－视图(view)－控制�
 
 ### 二、MVP
 
-![MVP](..\assets\MVP.png)
+![MVP](..//assets//MVP.png)
 
 MVP作为MVC的演化，解决了不少的缺点，对于Android来说，MVP的Model层与MVC的一样，而Activity/Fragment不再是Controller，而是View层，所有关于用户事件转发全部交给Presenter层处理。
 
