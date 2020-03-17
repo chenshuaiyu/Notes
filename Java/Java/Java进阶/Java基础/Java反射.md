@@ -188,7 +188,7 @@ static class Proxy implements Subject {
 主要涉及两个类，这两个类都是java.lang.reflect包下的类，内部主要通过反射来实现的。
 
 - java.lang.reflect.Proxy：这是生成代理类的主类，通过Proxy类生成的代理类都继承了Proxy类。
-- java.lang.reflect.InvocationHandle：这里称它为调用处理器，它是一个接口。当动态处理类中的方法时，将会直接转接到执行自定义的InvocationHandle中的invoke()方法。即我们动态生成的代理类需要完成的具体内容需要自己定义一个类，而这个类必须实现InvocationHandle接口，通过重写invoke()方法来执行具体内容。
+- java.lang.reflect.InvocationHandler：这里称它为调用处理器，它是一个接口。当动态处理类中的方法时，将会直接转接到执行自定义的InvocationHandle中的invoke()方法。即我们动态生成的代理类需要完成的具体内容需要自己定义一个类，而这个类必须实现InvocationHandle接口，通过重写invoke()方法来执行具体内容。
 
 Proxy提供了两个方法来创建动态代理类和动态代理实例。
 

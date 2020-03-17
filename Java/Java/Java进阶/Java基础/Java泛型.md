@@ -73,7 +73,7 @@ Person<String> a = new <Integer>Person<>(15);
 
 顾名思义就是匹配任意类型的类型实参。
 
-类型通配符时一个问号（？），将一个问号作为类型实参传给LIst集合，写作`List<?>`（意思是元素类型未知的List）。
+类型通配符时一个问号（?），将一个问号作为类型实参传给List集合，写作`List<?>`（意思是元素类型未知的List）。
 
 ```java
 public void test(List<?> c){

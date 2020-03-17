@@ -160,7 +160,7 @@ Thread-1获得锁
 
 1. Lock是一个接口，而synchronized是Java关键字，是内置的语言实现。
 2. synchronized在发生异常时，会自动释放线程所占有的锁，因此不会导致死锁现象发生；而Lock发生异常时，如果没有主动通过unlock方法去释放锁，很可能造成死锁现象，因此使用Lock时需要在finally块中释放锁。
-3. Lock可以让等待锁的线程相应中断，而synchronized却不行，使用synchronized时，等待的线程会一直等待下去，不能响应中断。
+3. Lock可以让等待锁的线程响应中断，而synchronized却不行，使用synchronized时，等待的线程会一直等待下去，不能响应中断。
 4. 通过Lock可以知道有没有成功获取锁，而synchronized却无法办到。
 5. Lock可以提供多个线程进行读操作的效率。
 
